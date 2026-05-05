@@ -1,0 +1,113 @@
+# ─────────────────────────────────────────────────────────────────────────
+# Visual Studio + .NET 표준 .gitignore
+# ─────────────────────────────────────────────────────────────────────────
+
+# 빌드 산출물
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio 사용자 파일
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.dbmdl
+*.dbproj.schemaview
+*.jfm
+
+# .vs / .idea
+.vs/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache/options directory
+.vs/
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+
+# .NET Core / Test
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# NuGet packaging
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+
+# 코드 분석
+coverage*.json
+coverage*.xml
+coverage*.info
+
+# Rider
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains tools
+.idea/
+*.sln.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
+
+# 로컬 환경 파일 / 비밀
+*.local.json
+*.local.config
+.env
+.env.local
+appsettings.Development.json
+
+# 임시
+*.tmp
+*.temp
+*.bak
+*.cache
+
+# Publish 산출물
+publish/
+
+# Coverlet
+*.opencover.xml
+
+# DocFX 산출물
+_site/
+api/
+obj/api/
+
+# Claude Code 작업 흔적
+.claude/
