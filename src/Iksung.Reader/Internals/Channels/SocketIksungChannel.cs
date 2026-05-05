@@ -1,6 +1,7 @@
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using Iksung.Reader.Exceptions;
 using Iksung.Reader.Internals.Protocol;
 
 namespace Iksung.Reader.Internals.Channels;
@@ -127,6 +128,8 @@ internal sealed class SocketIksungChannel : IIksungChannel
 
     public void Disconnect()
     {
+        _pendingResponse?.TrySetCanceled();
+        _pendingResponse = null;
         DisconnectClient();
         StopServer();
     }
@@ -191,6 +194,42 @@ internal sealed class SocketIksungChannel : IIksungChannel
     }
 
     public void SocketInit() => Disconnect();
+
+    private readonly SemaphoreSlim _sendLock = new(1, 1);
+    private TaskCompletionSource<IksungPacket>? _pendingResponse;
+
+    public async Task<byte[]> SendAndReceiveAsync(byte[] request, int timeoutMs, CancellationToken ct = default)
+    {
+        await _sendLock.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            var tcs = new TaskCompletionSource<IksungPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _pendingResponse = tcs;
+            Send(request);
+
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            linked.CancelAfter(timeoutMs);
+            using (linked.Token.Register(() => tcs.TrySetCanceled(linked.Token)))
+            {
+                IksungPacket pkt;
+                try   { pkt = await tcs.Task.ConfigureAwait(false); }
+                catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+                {
+                    throw new IksungTimeoutException($"응답 대기 시간 초과 ({timeoutMs} ms)");
+                }
+
+                if (pkt.State == Constants.STATE_FAIL)
+                    throw new IksungProtocolException($"장치가 오류 응답 반환 (cmd1=0x{pkt.Cmd1:X2} cmd2=0x{pkt.Cmd2:X2})");
+
+                return pkt.Data;
+            }
+        }
+        finally
+        {
+            _pendingResponse = null;
+            _sendLock.Release();
+        }
+    }
 
     private volatile bool _rawIoActive;
 
@@ -381,12 +420,21 @@ internal sealed class SocketIksungChannel : IIksungChannel
         return len;
     }
 
+    private void DeliverPacket(IksungPacket pkt)
+    {
+        var pending = _pendingResponse;
+        if (pending != null && pkt.Protocol != PacketProtocol.Invalid)
+            pending.TrySetResult(pkt);
+        else
+            PacketReceived?.Invoke(this, pkt);
+    }
+
     private void FlushInvalidAccumulator()
     {
         if (_invalidAccumulator.Count == 0) return;
         var data = _invalidAccumulator.ToArray();
         _invalidAccumulator.Clear();
-        PacketReceived?.Invoke(this, new IksungPacket(0, 0, 0, [], lowData: data, protocol: PacketProtocol.Invalid));
+        DeliverPacket(new IksungPacket(0, 0, 0, [], lowData: data, protocol: PacketProtocol.Invalid));
     }
 
     private int TryParseStandard(byte[] buf, int len)
@@ -398,7 +446,7 @@ internal sealed class SocketIksungChannel : IIksungChannel
         if (totalLen > buf.Length) return -1;
         if (len < totalLen)         return 0;
 
-        if (buf[totalLen - 1] != PacketBuilder.ETX)                       return -1;
+        if (buf[totalLen - 1] != PacketBuilder.ETX)                            return -1;
         if (PacketBuilder.CalcChecksum(buf, 1, 5 + dataLen) != buf[6 + dataLen]) return -1;
 
         byte cmd1 = buf[1], cmd2 = buf[2], state = buf[3];
@@ -407,7 +455,7 @@ internal sealed class SocketIksungChannel : IIksungChannel
         byte[] raw = new byte[totalLen];
         Array.Copy(buf, 0, raw, 0, totalLen);
 
-        PacketReceived?.Invoke(this, new IksungPacket(cmd1, cmd2, state, data, raw, PacketProtocol.Standard));
+        DeliverPacket(new IksungPacket(cmd1, cmd2, state, data, raw, PacketProtocol.Standard));
         return totalLen;
     }
 
@@ -420,7 +468,7 @@ internal sealed class SocketIksungChannel : IIksungChannel
         if (totalLen > buf.Length) return -1;
         if (len < totalLen)         return 0;
 
-        if (buf[totalLen - 1] != PacketBuilder.ETX)                       return -1;
+        if (buf[totalLen - 1] != PacketBuilder.ETX)                            return -1;
         if (PacketBuilder.CalcChecksum(buf, 1, 4 + dataLen) != buf[5 + dataLen]) return -1;
 
         byte cmd = buf[1], state = buf[2];
@@ -429,7 +477,7 @@ internal sealed class SocketIksungChannel : IIksungChannel
         byte[] raw = new byte[totalLen];
         Array.Copy(buf, 0, raw, 0, totalLen);
 
-        PacketReceived?.Invoke(this, new IksungPacket(0, cmd, state, data, raw, PacketProtocol.OldFormat));
+        DeliverPacket(new IksungPacket(0, cmd, state, data, raw, PacketProtocol.OldFormat));
         return totalLen;
     }
 
@@ -452,7 +500,7 @@ internal sealed class SocketIksungChannel : IIksungChannel
         byte[] raw = new byte[totalLen];
         Array.Copy(buf, 0, raw, 0, totalLen);
 
-        PacketReceived?.Invoke(this, new IksungPacket(buf[0], func, 0, data, raw, PacketProtocol.ModbusRtu));
+        DeliverPacket(new IksungPacket(buf[0], func, 0, data, raw, PacketProtocol.ModbusRtu));
         return totalLen;
     }
 

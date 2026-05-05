@@ -10,10 +10,20 @@ internal interface IIksungChannel : IDisposable
 {
     bool IsConnected { get; }
 
+    // Fired for unsolicited packets (AutoRead tag arrivals) only.
+    // Request-response commands use SendAndReceiveAsync instead.
     event EventHandler<IksungPacket>? PacketReceived;
     event EventHandler<bool>?         ConnectionChanged;
 
+    // Fire-and-forget send (for commands that don't need a response, e.g. buzzer).
     void Send(byte[] data);
+
+    // Send a request packet and wait up to timeoutMs for the matching response.
+    // Returns the Data payload of the response packet.
+    // Throws IksungTimeoutException when no response arrives within timeoutMs.
+    // Throws IksungProtocolException when the response indicates STATE_FAIL.
+    Task<byte[]> SendAndReceiveAsync(byte[] request, int timeoutMs, CancellationToken ct = default);
+
     void Disconnect();
 
     // Raw byte I/O for firmware update (XCP / IS-Update). Pauses normal packet parsing.

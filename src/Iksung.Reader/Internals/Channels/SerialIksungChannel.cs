@@ -1,5 +1,6 @@
 using System.IO;
 using System.IO.Ports;
+using Iksung.Reader.Exceptions;
 using Iksung.Reader.Internals.Protocol;
 
 namespace Iksung.Reader.Internals.Channels;
@@ -7,10 +8,20 @@ namespace Iksung.Reader.Internals.Channels;
 internal sealed class SerialIksungChannel : IIksungChannel
 {
     private SerialPort? _port;
+    private readonly string _portName;
+    private readonly int    _baudRate;
+    private readonly int    _dataBits;
+    private readonly StopBits  _stopBits;
+    private readonly Parity    _parity;
+    private readonly Handshake _handshake;
+
     private readonly byte[] _rxBuf = new byte[10240];
     private int _rxLen;
     private readonly object _rxLock = new();
     private long _lastRxTick;
+
+    private readonly SemaphoreSlim _sendLock = new(1, 1);
+    private TaskCompletionSource<IksungPacket>? _pendingResponse;
 
     public bool IsConnected => _port?.IsOpen == true;
 
@@ -18,7 +29,124 @@ internal sealed class SerialIksungChannel : IIksungChannel
     public event EventHandler<IksungPacket>? TxPacketSent;
     public event EventHandler<bool>?         ConnectionChanged;
 
+    public SerialIksungChannel(string portName, int baudRate,
+        int dataBits = 8, StopBits stopBits = StopBits.One,
+        Parity parity = Parity.None, Handshake handshake = Handshake.None)
+    {
+        _portName  = portName;
+        _baudRate  = baudRate;
+        _dataBits  = dataBits;
+        _stopBits  = stopBits;
+        _parity    = parity;
+        _handshake = handshake;
+    }
+
     public IEnumerable<string> GetAvailablePorts() => SerialPort.GetPortNames();
+
+    // Connects using the parameters given to the constructor.
+    public async Task ConnectAsync(CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+        Configure(_portName, _baudRate, _dataBits, _stopBits, _parity, _handshake);
+        bool ok = await OpenAsync().ConfigureAwait(false);
+        if (!ok) throw new IksungException($"'{_portName}' 포트를 열 수 없습니다.");
+    }
+
+    public void Configure(string port, int baudRate, int dataBits,
+                          StopBits stopBits, Parity parity, Handshake handshake)
+    {
+        if (_port?.IsOpen == true) Disconnect();
+        _port = new SerialPort(port, baudRate, parity, dataBits, stopBits)
+        {
+            Handshake       = handshake,
+            DtrEnable       = true,
+            DiscardNull     = false,
+            ReadBufferSize  = 10240,
+            WriteBufferSize = 10240,
+        };
+        _port.DataReceived  += OnDataReceived;
+        _port.ErrorReceived += OnErrorReceived;
+        lock (_rxLock) _rxLen = 0;
+    }
+
+    private async Task<bool> OpenAsync()
+    {
+        return await Task.Run(() =>
+        {
+            if (_port == null) return false;
+            try
+            {
+                if (_port.IsOpen) _port.Close();
+                _port.Open();
+                _port.ReadTimeout = 500;
+                ConnectionChanged?.Invoke(this, true);
+                return true;
+            }
+            catch
+            {
+                _port?.Dispose();
+                _port = null;
+                return false;
+            }
+        }).ConfigureAwait(false);
+    }
+
+    public void Disconnect()
+    {
+        if (_port == null) return;
+        _port.DataReceived  -= OnDataReceived;
+        _port.ErrorReceived -= OnErrorReceived;
+        try { _port.Close(); } catch { }
+        _port.Dispose();
+        _port = null;
+        _pendingResponse?.TrySetCanceled();
+        _pendingResponse = null;
+        ConnectionChanged?.Invoke(this, false);
+    }
+
+    public void Send(byte[] data)
+    {
+        if (_port?.IsOpen != true) return;
+        try { _port.Write(data, 0, data.Length); }
+        catch (IOException)               { HandleDisconnect(); return; }
+        catch (InvalidOperationException) { HandleDisconnect(); return; }
+        RaiseTxEvent(data);
+    }
+
+    public async Task<byte[]> SendAndReceiveAsync(byte[] request, int timeoutMs, CancellationToken ct = default)
+    {
+        await _sendLock.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            var tcs = new TaskCompletionSource<IksungPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _pendingResponse = tcs;
+            Send(request);
+
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            linked.CancelAfter(timeoutMs);
+            using (linked.Token.Register(() => tcs.TrySetCanceled(linked.Token)))
+            {
+                IksungPacket pkt;
+                try   { pkt = await tcs.Task.ConfigureAwait(false); }
+                catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+                {
+                    throw new IksungTimeoutException($"응답 대기 시간 초과 ({timeoutMs} ms)");
+                }
+
+                if (pkt.State == Constants.STATE_FAIL)
+                    throw new IksungProtocolException($"장치가 오류 응답 반환 (cmd1=0x{pkt.Cmd1:X2} cmd2=0x{pkt.Cmd2:X2})");
+
+                return pkt.Data;
+            }
+        }
+        finally
+        {
+            _pendingResponse = null;
+            _sendLock.Release();
+        }
+    }
+
+    // ─── Raw I/O (bootloader) ───────────────────────────────
 
     private volatile bool _rawIoActive;
 
@@ -47,16 +175,15 @@ internal sealed class SerialIksungChannel : IIksungChannel
     public int ReadRaw(byte[] buf, int offset, int count, int timeoutMs)
     {
         if (_port?.IsOpen != true) return 0;
-        var start = Environment.TickCount;
+        var start     = Environment.TickCount;
         int totalRead = 0;
         while (totalRead < count)
         {
-            int remaining = count - totalRead;
             int avail;
             try { avail = _port.BytesToRead; } catch { return totalRead; }
             if (avail > 0)
             {
-                int toRead = Math.Min(avail, remaining);
+                int toRead = Math.Min(avail, count - totalRead);
                 try
                 {
                     int n = _port.Read(buf, offset + totalRead, toRead);
@@ -87,36 +214,7 @@ internal sealed class SerialIksungChannel : IIksungChannel
         catch { }
     }
 
-    private sealed class RawIoLease(SerialIksungChannel owner) : IDisposable
-    {
-        private bool _disposed;
-        public void Dispose()
-        {
-            if (_disposed) return;
-            _disposed = true;
-            owner._rawIoActive = false;
-            try { owner._port?.DiscardInBuffer();  } catch { }
-            try { owner._port?.DiscardOutBuffer(); } catch { }
-            lock (owner._rxLock) owner._rxLen = 0;
-        }
-    }
-
-    public void Configure(string port, int baudRate, int dataBits,
-                          StopBits stopBits, Parity parity, Handshake handshake)
-    {
-        if (_port?.IsOpen == true) Disconnect();
-        _port = new SerialPort(port, baudRate, parity, dataBits, stopBits)
-        {
-            Handshake       = handshake,
-            DtrEnable       = true,
-            DiscardNull     = false,
-            ReadBufferSize  = 10240,
-            WriteBufferSize = 10240,
-        };
-        _port.DataReceived  += OnDataReceived;
-        _port.ErrorReceived += OnErrorReceived;
-        lock (_rxLock) _rxLen = 0;
-    }
+    // ─── Internals ──────────────────────────────────────────
 
     private void OnErrorReceived(object sender, SerialErrorReceivedEventArgs e)
     {
@@ -132,77 +230,9 @@ internal sealed class SerialIksungChannel : IIksungChannel
         try { port.ErrorReceived -= OnErrorReceived; } catch { }
         try { port.Close(); } catch { }
         try { port.Dispose(); } catch { }
+        _pendingResponse?.TrySetCanceled();
+        _pendingResponse = null;
         ConnectionChanged?.Invoke(this, false);
-    }
-
-    public async Task<bool> OpenAsync()
-    {
-        return await Task.Run(() =>
-        {
-            if (_port == null) return false;
-            try
-            {
-                if (_port.IsOpen) _port.Close();
-                _port.Open();
-                _port.ReadTimeout = 500;
-                ConnectionChanged?.Invoke(this, true);
-                return true;
-            }
-            catch
-            {
-                _port?.Dispose();
-                _port = null;
-                return false;
-            }
-        }).ConfigureAwait(false);
-    }
-
-    public async Task<bool> ConnectAsync(string port, int baudRate, int dataBits,
-                                         StopBits stopBits, Parity parity, Handshake handshake)
-    {
-        Configure(port, baudRate, dataBits, stopBits, parity, handshake);
-        return await OpenAsync().ConfigureAwait(false);
-    }
-
-    public void Disconnect()
-    {
-        if (_port == null) return;
-        _port.DataReceived  -= OnDataReceived;
-        _port.ErrorReceived -= OnErrorReceived;
-        try { _port.Close(); } catch { }
-        _port.Dispose();
-        _port = null;
-        ConnectionChanged?.Invoke(this, false);
-    }
-
-    public void Send(byte[] data)
-    {
-        if (_port?.IsOpen != true) return;
-        try { _port.Write(data, 0, data.Length); }
-        catch (IOException)               { HandleDisconnect(); return; }
-        catch (InvalidOperationException) { HandleDisconnect(); return; }
-
-        IksungPacket? args = null;
-        if (data.Length >= 7 && data[0] == PacketBuilder.STX)
-        {
-            byte cmd1 = data[1], cmd2 = data[2];
-            int dataLen = (data[3] << 8) | data[4];
-            byte[] payload = new byte[dataLen];
-            if (dataLen > 0 && data.Length >= 5 + dataLen)
-                Array.Copy(data, 5, payload, 0, dataLen);
-            args = new IksungPacket(cmd1, cmd2, 0, payload, lowData: data, protocol: PacketProtocol.Standard);
-        }
-        else if (data.Length >= 6 && data[0] == 0x02)
-        {
-            byte cmd = data[1];
-            int dataLen = (data[2] << 8) | data[3];
-            byte[] payload = new byte[dataLen];
-            if (dataLen > 0 && data.Length >= 4 + dataLen)
-                Array.Copy(data, 4, payload, 0, dataLen);
-            args = new IksungPacket(0, cmd, 0, payload, lowData: data, protocol: PacketProtocol.OldFormat);
-        }
-
-        if (args != null) TxPacketSent?.Invoke(this, args);
     }
 
     private void OnDataReceived(object sender, SerialDataReceivedEventArgs e)
@@ -226,10 +256,8 @@ internal sealed class SerialIksungChannel : IIksungChannel
         lock (_rxLock)
         {
             long now = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-            if (_lastRxTick > 0 && now > _lastRxTick + 200)
-                _rxLen = 0;
+            if (_lastRxTick > 0 && now > _lastRxTick + 200) _rxLen = 0;
             _lastRxTick = now;
-
             foreach (byte b in incoming)
             {
                 if (_rxLen >= _rxBuf.Length) _rxLen = 0;
@@ -237,6 +265,15 @@ internal sealed class SerialIksungChannel : IIksungChannel
             }
             TryParsePackets();
         }
+    }
+
+    private void DeliverPacket(IksungPacket pkt)
+    {
+        var pending = _pendingResponse;
+        if (pending != null && pkt.Protocol != PacketProtocol.Invalid)
+            pending.TrySetResult(pkt);
+        else
+            PacketReceived?.Invoke(this, pkt);
     }
 
     private readonly List<byte> _invalidAccumulator = new(256);
@@ -264,7 +301,6 @@ internal sealed class SerialIksungChannel : IIksungChannel
             FlushInvalidAccumulator();
             ConsumeFront(parsed);
         }
-
         FlushInvalidAccumulator();
     }
 
@@ -273,7 +309,7 @@ internal sealed class SerialIksungChannel : IIksungChannel
         if (_invalidAccumulator.Count == 0) return;
         var data = _invalidAccumulator.ToArray();
         _invalidAccumulator.Clear();
-        PacketReceived?.Invoke(this, new IksungPacket(0, 0, 0, [], lowData: data, protocol: PacketProtocol.Invalid));
+        DeliverPacket(new IksungPacket(0, 0, 0, [], lowData: data, protocol: PacketProtocol.Invalid));
     }
 
     private int TryParseStandard()
@@ -285,7 +321,7 @@ internal sealed class SerialIksungChannel : IIksungChannel
         if (totalLen > _rxBuf.Length) return -1;
         if (_rxLen < totalLen)         return 0;
 
-        if (_rxBuf[totalLen - 1] != PacketBuilder.ETX)                  return -1;
+        if (_rxBuf[totalLen - 1] != PacketBuilder.ETX)                           return -1;
         if (PacketBuilder.CalcChecksum(_rxBuf, 1, 5 + dataLen) != _rxBuf[6 + dataLen]) return -1;
 
         byte cmd1 = _rxBuf[1], cmd2 = _rxBuf[2], state = _rxBuf[3];
@@ -294,7 +330,7 @@ internal sealed class SerialIksungChannel : IIksungChannel
         byte[] raw = new byte[totalLen];
         Array.Copy(_rxBuf, 0, raw, 0, totalLen);
 
-        PacketReceived?.Invoke(this, new IksungPacket(cmd1, cmd2, state, data, raw, PacketProtocol.Standard));
+        DeliverPacket(new IksungPacket(cmd1, cmd2, state, data, raw, PacketProtocol.Standard));
         return totalLen;
     }
 
@@ -307,7 +343,7 @@ internal sealed class SerialIksungChannel : IIksungChannel
         if (totalLen > _rxBuf.Length) return -1;
         if (_rxLen < totalLen)         return 0;
 
-        if (_rxBuf[totalLen - 1] != PacketBuilder.ETX)                  return -1;
+        if (_rxBuf[totalLen - 1] != PacketBuilder.ETX)                           return -1;
         if (PacketBuilder.CalcChecksum(_rxBuf, 1, 4 + dataLen) != _rxBuf[5 + dataLen]) return -1;
 
         byte cmd = _rxBuf[1], state = _rxBuf[2];
@@ -316,7 +352,7 @@ internal sealed class SerialIksungChannel : IIksungChannel
         byte[] raw = new byte[totalLen];
         Array.Copy(_rxBuf, 0, raw, 0, totalLen);
 
-        PacketReceived?.Invoke(this, new IksungPacket(0, cmd, state, data, raw, PacketProtocol.OldFormat));
+        DeliverPacket(new IksungPacket(0, cmd, state, data, raw, PacketProtocol.OldFormat));
         return totalLen;
     }
 
@@ -324,22 +360,22 @@ internal sealed class SerialIksungChannel : IIksungChannel
     {
         if (_rxLen < 5) return 0;
         byte func = _rxBuf[1];
-        if (func != 0x03)              return -1;
+        if (func != 0x03)             return -1;
         int byteCount = _rxBuf[2];
         int totalLen  = 3 + byteCount + 2;
-        if (totalLen > _rxBuf.Length)  return -1;
+        if (totalLen > _rxBuf.Length) return -1;
         if (_rxLen < totalLen)         return 0;
 
         ushort calcCrc  = PacketBuilder.ModbusCrc16(_rxBuf, 3 + byteCount);
         ushort frameCrc = (ushort)((_rxBuf[3 + byteCount] << 8) | _rxBuf[3 + byteCount + 1]);
-        if (calcCrc != frameCrc)       return -1;
+        if (calcCrc != frameCrc)      return -1;
 
         byte[] data = new byte[byteCount];
         if (byteCount > 0) Array.Copy(_rxBuf, 3, data, 0, byteCount);
         byte[] raw = new byte[totalLen];
         Array.Copy(_rxBuf, 0, raw, 0, totalLen);
 
-        PacketReceived?.Invoke(this, new IksungPacket(_rxBuf[0], func, 0, data, raw, PacketProtocol.ModbusRtu));
+        DeliverPacket(new IksungPacket(_rxBuf[0], func, 0, data, raw, PacketProtocol.ModbusRtu));
         return totalLen;
     }
 
@@ -348,6 +384,31 @@ internal sealed class SerialIksungChannel : IIksungChannel
         if (count >= _rxLen) { _rxLen = 0; return; }
         _rxLen -= count;
         Array.Copy(_rxBuf, count, _rxBuf, 0, _rxLen);
+    }
+
+    private void RaiseTxEvent(byte[] data)
+    {
+        if (data.Length < 7 || data[0] != PacketBuilder.STX) return;
+        byte cmd1   = data[1], cmd2 = data[2];
+        int dataLen = (data[3] << 8) | data[4];
+        byte[] payload = new byte[dataLen];
+        if (dataLen > 0 && data.Length >= 5 + dataLen)
+            Array.Copy(data, 5, payload, 0, dataLen);
+        TxPacketSent?.Invoke(this, new IksungPacket(cmd1, cmd2, 0, payload, lowData: data));
+    }
+
+    private sealed class RawIoLease(SerialIksungChannel owner) : IDisposable
+    {
+        private bool _disposed;
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            owner._rawIoActive = false;
+            try { owner._port?.DiscardInBuffer();  } catch { }
+            try { owner._port?.DiscardOutBuffer(); } catch { }
+            lock (owner._rxLock) owner._rxLen = 0;
+        }
     }
 
     public void Dispose() => Disconnect();
