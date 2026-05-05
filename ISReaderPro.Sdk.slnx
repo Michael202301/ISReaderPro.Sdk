@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/HelloWorld.Console/HelloWorld.Console.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Iksung.Reader/Iksung.Reader.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Iksung.Reader.Tests/Iksung.Reader.Tests.csproj" />
+  </Folder>
+</Solution>

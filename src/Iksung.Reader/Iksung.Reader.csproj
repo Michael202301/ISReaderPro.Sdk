@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AssemblyName>Iksung.Reader</AssemblyName>
+    <RootNamespace>Iksung.Reader</RootNamespace>
+
+    <!-- NuGet 패키지 메타데이터 -->
+    <PackageId>Iksung.Reader</PackageId>
+    <Version>0.1.0-preview</Version>
+    <Authors>iksung-electronics</Authors>
+    <Description>Easy-to-use SDK for IKSUNG NFC/RFID readers. Cross-platform.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/iksung-electronics/iksung-reader-sdk</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/iksung-electronics/iksung-reader-sdk</RepositoryUrl>
+    <PackageTags>nfc;rfid;iksung;reader;is-3500</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IO.Ports" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Iksung.Reader.Tests" />
+  </ItemGroup>
+
+</Project>
