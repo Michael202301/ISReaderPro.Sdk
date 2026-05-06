@@ -15,11 +15,11 @@
     <Project Path="samples/12-Relay/Relay.csproj" />
     <Project Path="samples/13-CommandConsole/CommandConsole.csproj" />
   </Folder>
-  <Folder Name="/samples/net4x/">
-    <Project Path="samples/net4x/01-HelloWorld/HelloWorld.Net4x.csproj" />
-    <Project Path="samples/net4x/02-MifareClassic/MifareClassic.Net4x.csproj" />
-    <Project Path="samples/net4x/03-AutoRead/AutoRead.Net4x.csproj" />
-    <Project Path="samples/net4x/04-WinFormsIntegration/WinFormsIntegration.Net4x.csproj" />
+  <Folder Name="/net4x/">
+    <Project Path="net4x/01-HelloWorld/HelloWorld.Net4x.csproj" />
+    <Project Path="net4x/02-MifareClassic/MifareClassic.Net4x.csproj" />
+    <Project Path="net4x/03-AutoRead/AutoRead.Net4x.csproj" />
+    <Project Path="net4x/04-WinFormsIntegration/WinFormsIntegration.Net4x.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Iksung.Reader/Iksung.Reader.csproj" />

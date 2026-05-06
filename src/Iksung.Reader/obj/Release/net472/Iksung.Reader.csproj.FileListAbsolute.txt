@@ -1,0 +1,16 @@
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\bin\Release\net472\Iksung.Reader.dll
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\bin\Release\net472\Iksung.Reader.pdb
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\bin\Release\net472\Iksung.Reader.xml
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\bin\Release\net472\Microsoft.Bcl.AsyncInterfaces.dll
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\bin\Release\net472\System.IO.Ports.dll
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\bin\Release\net472\System.Runtime.CompilerServices.Unsafe.dll
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\bin\Release\net472\System.Threading.Tasks.Extensions.dll
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Release\net472\Iksung.Reader.csproj.AssemblyReference.cache
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Release\net472\Iksung.Reader.GeneratedMSBuildEditorConfig.editorconfig
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Release\net472\Iksung.Reader.AssemblyInfoInputs.cache
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Release\net472\Iksung.Reader.AssemblyInfo.cs
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Release\net472\Iksung.Reader.csproj.CoreCompileInputs.cache
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Release\net472\Iksung.R.43D43249.Up2Date
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Release\net472\Iksung.Reader.dll
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Release\net472\Iksung.Reader.xml
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Release\net472\Iksung.Reader.pdb

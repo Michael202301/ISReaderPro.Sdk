@@ -1,0 +1,15 @@
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\bin\Debug\net8.0\Iksung.Reader.deps.json
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\bin\Debug\net8.0\Iksung.Reader.dll
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\bin\Debug\net8.0\Iksung.Reader.pdb
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\bin\Debug\net8.0\Iksung.Reader.xml
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Debug\net8.0\Iksung.Reader.csproj.AssemblyReference.cache
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Debug\net8.0\Iksung.Reader.GeneratedMSBuildEditorConfig.editorconfig
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Debug\net8.0\Iksung.Reader.AssemblyInfoInputs.cache
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Debug\net8.0\Iksung.Reader.AssemblyInfo.cs
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Debug\net8.0\Iksung.Reader.csproj.CoreCompileInputs.cache
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Debug\net8.0\Iksung.Reader.dll
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Debug\net8.0\refint\Iksung.Reader.dll
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Debug\net8.0\Iksung.Reader.xml
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Debug\net8.0\Iksung.Reader.pdb
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Debug\net8.0\ref\Iksung.Reader.dll
+D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\obj\Debug\net8.0\Iksung.Reader.sourcelink.json

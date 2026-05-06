@@ -93,7 +93,7 @@ sudo usermod -a -G dialout $USER
 | 12 | Relay | 릴레이 I/O 제어 |
 | 13 | CommandConsole | 대화형 RAW 명령 콘솔 |
 
-### .NET Framework 4.7.2 예제
+### .NET Framework 4.7.2
 
 | 번호 | 예제 | 설명 |
 |------|------|------|
@@ -105,7 +105,7 @@ sudo usermod -a -G dialout $USER
 ```bash
 # 실행 예시
 dotnet run --project samples/01-ReadAnyUid -- COM3
-dotnet run --project samples/net4x/01-HelloWorld -- COM3
+dotnet run --project net4x/01-HelloWorld -- COM3
 ```
 
 ---

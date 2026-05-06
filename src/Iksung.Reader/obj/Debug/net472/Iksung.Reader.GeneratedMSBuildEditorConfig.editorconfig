@@ -1,0 +1,8 @@
+is_global = true
+build_property.RootNamespace = Iksung.Reader
+build_property.ProjectDir = D:\Work\IS-ReaderPro-Software\ISReaderPro.Sdk\src\Iksung.Reader\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.CsWinRTUseWindowsUIXamlProjections = false
+build_property.EffectiveAnalysisLevelStyle = 
+build_property.EnableCodeStyleSeverity = 
