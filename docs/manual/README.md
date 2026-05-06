@@ -32,6 +32,7 @@
 |------|-----------|
 | IS-3500K | Serial (UART 115200) |
 | IS-3500 시리즈 | Serial (UART) |
+| IS-NFC 시리즈 | Serial (UART) |
 
 ---
 

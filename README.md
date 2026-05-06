@@ -8,8 +8,6 @@
 
 **Pre-release / under active development.** First public NuGet target: `v1.0.0`.
 
-See [`docs/HANDOFF.md`](docs/HANDOFF.md) for current Phase 1 progress.
-
 ---
 
 ## Install
@@ -18,97 +16,103 @@ See [`docs/HANDOFF.md`](docs/HANDOFF.md) for current Phase 1 progress.
 dotnet add package Iksung.Reader
 ```
 
-(Coming soon — see [Status](#status))
+(Coming soon — see [Status](#%EF%B8%8F-status))
 
 ---
 
 ## Hello World
 
 ```csharp
-using ISReaderPro.Sdk;
+using Iksung.Reader;
 
-await using var reader = await IksungReader.ConnectSerialAsync("COM3", 115200);
+await using var reader = await IksungReader.ConnectSerialAsync("COM3");
 Console.WriteLine($"Firmware: {await reader.ReadVersionAsync()}");
-Console.WriteLine($"UID: {Convert.ToHexString((await reader.ReadAnyCardAsync()).Uid)}");
+
+byte[] uid = await reader.ReadIso14443aUidAsync();
+Console.WriteLine($"UID: {BitConverter.ToString(uid).Replace("-", "")}");
 ```
 
-That's it. **4 lines.**
+---
+
+## Supported Products
+
+| 제품 | 인터페이스 |
+|------|-----------|
+| IS-3500K | Serial (UART 115200) |
+| IS-3500 시리즈 | Serial (UART) |
+| IS-NFC 시리즈 | Serial (UART) |
 
 ---
 
 ## Supported Channels
 
-| Channel | Status | Use Case |
-|---------|--------|----------|
-| Serial (System.IO.Ports) | Phase 1 | Most common — USB-to-Serial readers |
-| FTDI D2XX | Phase 2 | Direct FTDI driver, slightly faster |
-| PC/SC (winscard / pcsc-lite) | Phase 4 | CCID smart card readers |
-| TCP/IP Socket | Phase 4 | Network gateways |
-
-**Hardware scope:** FTDI-equipped readers only.
+| Channel | Status |
+|---------|--------|
+| Serial (UART) | ✅ 지원 |
+| TCP/IP Socket | ✅ 지원 |
+| USB CCID (PC/SC) | 🔜 예정 |
 
 ---
 
-## Platform Setup
+## Platform Support
 
-### Windows
+| OS | 지원 | Serial 포트 예시 |
+|----|------|----------------|
+| Windows | ✅ | `COM3` |
+| Linux | ✅ | `/dev/ttyUSB0` |
+| macOS | ✅ | `/dev/cu.usbserial-1234` |
 
-Just install. FTDI VCP driver is usually pre-installed via Windows Update.
-
-### Linux
+### Linux 설정
 
 ```bash
-# Add user to dialout group (logout/login required after)
+# 시리얼 포트 권한 추가 (로그아웃 후 재로그인 필요)
 sudo usermod -a -G dialout $USER
-
-# (FTDI D2XX only) Blacklist kernel VCP driver
-echo "blacklist ftdi_sio" | sudo tee /etc/modprobe.d/blacklist-ftdi.conf
-```
-
-Port name: `/dev/ttyUSB0`
-
-### macOS
-
-Install [FTDI VCP driver](https://ftdichip.com/drivers/vcp-drivers/), then approve in System Preferences → Security & Privacy.
-
-Port name: `/dev/tty.usbserial-XXXXXXXX`
-
----
-
-## Why Another SDK?
-
-The original IKSUNG FTDI SDK (`IS_D2XX_NET.dll`) uses a C-style API:
-
-```csharp
-// Before: 8 lines + 2 error checks, manual buffer management
-var reader = new IS_D2XX();
-var status = reader.is_OpenSerialNumber("FTHV3K7L", 115200);
-if (status != IS_OK) { /* ... */ }
-uint length = 256;
-byte[] buffer = new byte[256];
-status = reader.is_WriteReadCommand(0x00, 0x10, 0, null, ref length, ref buffer);
-if (status != IS_OK) { /* ... */ }
-string version = Encoding.ASCII.GetString(buffer, 0, (int)length);
-reader.is_Close();
-```
-
-This SDK provides a modern .NET-idiomatic API:
-
-```csharp
-// After: 3 lines, async/await, exceptions, no buffer management
-await using var reader = await IksungReader.ConnectSerialAsync("COM3", 115200);
-string version = await reader.ReadVersionAsync();
-// (auto-disposed at end of scope)
 ```
 
 ---
 
-## Roadmap
+## Samples
 
-- **v0.1.0-preview** (Phase 2 end) — Serial + FTDI channels, Linux/Mac CI verified
-- **v1.0.0** (Phase 3 end) — High-level helpers (`ReadAnyCardAsync`, `StartAutoReadAsync`), WPF/Console samples
-- **v1.1.0** (Phase 4) — PC/SC + Socket channels, REST API sample, Bootloader helper
-- **v2.x** — Custom channel injection (`IIksungChannel` public), more high-level helpers
+| 번호 | 예제 | 설명 |
+|------|------|------|
+| 01 | ReadAnyUid | UID 폴링 (ISO14443A/B, ISO15693, LF) |
+| 02 | Iso14443a | ISO 14443-A Layer-3/4 + APDU |
+| 03 | MifareClassic | 인증 + 블록 읽기/쓰기 |
+| 04 | MifareUltralight | 페이지 덤프/쓰기 |
+| 05 | Iso15693 | 멀티블록 읽기 |
+| 06 | AutoRead | 이벤트 기반 자동 인식 |
+| 07 | Desfire | DESFire EV1/EV2/EV3 전체 워크플로 |
+| 08 | NTag213 | NTag213/215/216 버전/서명/카운터 |
+| 09 | Lf125KhzAdvanced | EM410X, ISO11784, SECOM, Temic |
+| 10 | Iso7816 | USIM ATR + TPDU + ICCID 읽기 |
+| 11 | Bluetooth | BLE 이름/MAC/TX파워/GAP 설정 |
+| 12 | Relay | 릴레이 I/O 제어 |
+| 13 | CommandConsole | 대화형 RAW 명령 콘솔 |
+
+### .NET Framework 4.7.2 예제
+
+| 번호 | 예제 | 설명 |
+|------|------|------|
+| net4x/01 | HelloWorld | 연결 + UID 폴링 |
+| net4x/02 | MifareClassic | 인증 + 블록 읽기/쓰기 |
+| net4x/03 | AutoRead | 이벤트 기반 감지 |
+| net4x/04 | WinFormsIntegration | WinForms `Invoke()` 패턴 |
+
+```bash
+# 실행 예시
+dotnet run --project samples/01-ReadAnyUid -- COM3
+dotnet run --project samples/net4x/01-HelloWorld -- COM3
+```
+
+---
+
+## Documentation
+
+| 문서 | 내용 |
+|------|------|
+| [시작하기](docs/manual/01-getting-started.md) | 설치, 연결, 첫 번째 카드 읽기 |
+| [API 레퍼런스](docs/manual/api-reference.md) | 전체 공개 메서드 목록 |
+| [.NET 4.x 가이드](docs/manual/net4x-guide.md) | WinForms/WPF 통합 패턴 |
 
 ---
 
@@ -120,13 +124,6 @@ Free for commercial and non-commercial use. No royalties, no fees.
 
 ---
 
-## Contributing
-
-Issues and PRs welcome. See [CLAUDE.md](CLAUDE.md) for project conventions.
-
----
-
 ## Related
 
-- [ISReaderPro V6.01](../ISReaderPro-V6.01/) — Reference WPF application this SDK was extracted from
 - [Springcard PC/SC SDK](https://github.com/springcard/springcard.pcsc.sdk) — Inspiration for clean SDK design
