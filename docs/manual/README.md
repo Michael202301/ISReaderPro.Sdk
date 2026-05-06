@@ -30,9 +30,9 @@
 
 | 제품 | 인터페이스 |
 |------|-----------|
-| IS-3500K | Serial (UART 115200) |
-| IS-3500 시리즈 | Serial (UART) |
-| IS-NFC 시리즈 | Serial (UART) |
+| IS-NFC | Serial (UART 115200) |
+| IS-NFC 시리즈 | PC/SC |
+| IS-NFC 시리즈 | TCP Socket |
 
 ---
 
