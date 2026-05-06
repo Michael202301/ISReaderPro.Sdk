@@ -2,6 +2,8 @@
 
 > Easy-to-use SDK for IKSUNG NFC/RFID readers. Works on Windows, Linux, and macOS.
 
+🌐 **[www.iksung.co.kr](https://www.iksung.co.kr)**
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
 
 ## ⚠️ Status
@@ -126,4 +128,5 @@ Free for commercial and non-commercial use. No royalties, no fees.
 
 ## Related
 
+- 🌐 [익성전자 공식 홈페이지](https://www.iksung.co.kr)
 - [Springcard PC/SC SDK](https://github.com/springcard/springcard.pcsc.sdk) — Inspiration for clean SDK design
