@@ -109,5 +109,12 @@ _site/
 api/
 obj/api/
 
-# Claude Code 작업 흔적
+# Claude Code / AI 작업 흔적 (공개 리포에 올리지 않음)
 .claude/
+CLAUDE.md
+HANDOFF.md
+docs/HANDOFF.md
+docs/git-publish-guide.md
+harness.md
+phases/
+scripts/execute.py
