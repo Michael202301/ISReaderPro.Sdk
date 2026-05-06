@@ -48,20 +48,16 @@ namespace Iso14443a.Net4x
                                 byte[] uid4 = await reader.ActivateIso14443_4aAsync(1000, cts.Token);
                                 Console.WriteLine($"  ISO-DEP activated       UID+ATS: {Hex(uid4)}");
 
-                                // ── 3단계: SELECT PPSE (EMV 결제 환경 선택) ──
-                                // 2PAY.SYS.DDF01 (Payment System Directory)
-                                byte[] ppse = new byte[]
+                                // ── 3단계: GET CHALLENGE (ISO 7816-4) ──
+                                // 카드에서 8바이트 난수를 요청합니다.
+                                // CLA=00 INS=84 P1=00 P2=00 Le=08
+                                byte[] getChallenge = new byte[]
                                 {
-                                    0x00, 0xA4, 0x04, 0x00,          // SELECT by DF name
-                                    0x0E,                              // Lc = 14
-                                    0x32, 0x50, 0x41, 0x59, 0x2E,    // 2PAY.
-                                    0x53, 0x59, 0x53, 0x2E,           // SYS.
-                                    0x44, 0x44, 0x46, 0x30, 0x31,    // DDF01
-                                    0x00                              // Le
+                                    0x00, 0x84, 0x00, 0x00, 0x08     // GET CHALLENGE, Le=8
                                 };
 
-                                byte[] resp = await reader.ExchangeApduAsync(ppse, 3000, cts.Token);
-                                Console.WriteLine($"  SELECT PPSE response:   {Hex(resp)}");
+                                byte[] resp = await reader.ExchangeApduAsync(getChallenge, 3000, cts.Token);
+                                Console.WriteLine($"  GET CHALLENGE response: {Hex(resp)}");
 
                                 // SW1 SW2 상태 코드 해석
                                 if (resp.Length >= 2)
@@ -69,6 +65,12 @@ namespace Iso14443a.Net4x
                                     byte sw1 = resp[resp.Length - 2];
                                     byte sw2 = resp[resp.Length - 1];
                                     Console.WriteLine($"  Status word: {sw1:X2} {sw2:X2}  ({InterpretSw(sw1, sw2)})");
+                                    if (sw1 == 0x90 && sw2 == 0x00 && resp.Length >= 10)
+                                    {
+                                        byte[] random = new byte[resp.Length - 2];
+                                        Array.Copy(resp, 0, random, 0, random.Length);
+                                        Console.WriteLine($"  Random bytes (8):       {Hex(random)}");
+                                    }
                                 }
                             }
                             catch (IksungProtocolException)
