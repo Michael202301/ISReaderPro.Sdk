@@ -129,4 +129,3 @@ Free for commercial and non-commercial use. No royalties, no fees.
 ## Related
 
 - 🌐 [익성전자 공식 홈페이지](http://www.iksung.co.kr)
-- [Springcard PC/SC SDK](https://github.com/springcard/springcard.pcsc.sdk) — Inspiration for clean SDK design
