@@ -97,15 +97,15 @@ sudo usermod -a -G dialout $USER
 
 | 번호 | 예제 | 설명 |
 |------|------|------|
-| net4x/01 | HelloWorld | 연결 + UID 폴링 |
-| net4x/02 | MifareClassic | 인증 + 블록 읽기/쓰기 |
-| net4x/03 | AutoRead | 이벤트 기반 감지 |
-| net4x/04 | WinFormsIntegration | WinForms `Invoke()` 패턴 |
+| 01 | HelloWorld | 연결 + UID 폴링 |
+| 02 | MifareClassic | 인증 + 블록 읽기/쓰기 |
+| 03 | AutoRead | 이벤트 기반 감지 |
+| 04 | WinFormsIntegration | WinForms `Invoke()` 패턴 |
 
 ```bash
 # 실행 예시
-dotnet run --project samples/01-ReadAnyUid -- COM3
-dotnet run --project net4x/01-HelloWorld -- COM3
+dotnet run --project NET8-Samples/01-ReadAnyUid -- COM3
+dotnet run --project NET4x-Samples/01-HelloWorld -- COM3
 ```
 
 ---

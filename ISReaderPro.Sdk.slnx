@@ -1,25 +1,25 @@
 <Solution>
-  <Folder Name="/samples/">
-    <Project Path="samples/HelloWorld.Console/HelloWorld.Console.csproj" />
-    <Project Path="samples/01-ReadAnyUid/ReadAnyUid.csproj" />
-    <Project Path="samples/02-Iso14443a/Iso14443a.csproj" />
-    <Project Path="samples/03-MifareClassic/MifareClassic.csproj" />
-    <Project Path="samples/04-MifareUltralight/MifareUltralight.csproj" />
-    <Project Path="samples/05-Iso15693/Iso15693.csproj" />
-    <Project Path="samples/06-AutoRead/AutoRead.csproj" />
-    <Project Path="samples/07-Desfire/Desfire.csproj" />
-    <Project Path="samples/08-NTag213/NTag213.csproj" />
-    <Project Path="samples/09-Lf125KhzAdvanced/Lf125KhzAdvanced.csproj" />
-    <Project Path="samples/10-Iso7816/Iso7816.csproj" />
-    <Project Path="samples/11-Bluetooth/Bluetooth.csproj" />
-    <Project Path="samples/12-Relay/Relay.csproj" />
-    <Project Path="samples/13-CommandConsole/CommandConsole.csproj" />
+  <Folder Name="/NET8-Samples/">
+    <Project Path="NET8-Samples/HelloWorld.Console/HelloWorld.Console.csproj" />
+    <Project Path="NET8-Samples/01-ReadAnyUid/ReadAnyUid.csproj" />
+    <Project Path="NET8-Samples/02-Iso14443a/Iso14443a.csproj" />
+    <Project Path="NET8-Samples/03-MifareClassic/MifareClassic.csproj" />
+    <Project Path="NET8-Samples/04-MifareUltralight/MifareUltralight.csproj" />
+    <Project Path="NET8-Samples/05-Iso15693/Iso15693.csproj" />
+    <Project Path="NET8-Samples/06-AutoRead/AutoRead.csproj" />
+    <Project Path="NET8-Samples/07-Desfire/Desfire.csproj" />
+    <Project Path="NET8-Samples/08-NTag213/NTag213.csproj" />
+    <Project Path="NET8-Samples/09-Lf125KhzAdvanced/Lf125KhzAdvanced.csproj" />
+    <Project Path="NET8-Samples/10-Iso7816/Iso7816.csproj" />
+    <Project Path="NET8-Samples/11-Bluetooth/Bluetooth.csproj" />
+    <Project Path="NET8-Samples/12-Relay/Relay.csproj" />
+    <Project Path="NET8-Samples/13-CommandConsole/CommandConsole.csproj" />
   </Folder>
-  <Folder Name="/net4x/">
-    <Project Path="net4x/01-HelloWorld/HelloWorld.Net4x.csproj" />
-    <Project Path="net4x/02-MifareClassic/MifareClassic.Net4x.csproj" />
-    <Project Path="net4x/03-AutoRead/AutoRead.Net4x.csproj" />
-    <Project Path="net4x/04-WinFormsIntegration/WinFormsIntegration.Net4x.csproj" />
+  <Folder Name="/NET4x-Samples/">
+    <Project Path="NET4x-Samples/01-HelloWorld/HelloWorld.Net4x.csproj" />
+    <Project Path="NET4x-Samples/02-MifareClassic/MifareClassic.Net4x.csproj" />
+    <Project Path="NET4x-Samples/03-AutoRead/AutoRead.Net4x.csproj" />
+    <Project Path="NET4x-Samples/04-WinFormsIntegration/WinFormsIntegration.Net4x.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Iksung.Reader/Iksung.Reader.csproj" />

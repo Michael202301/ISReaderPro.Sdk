@@ -167,17 +167,17 @@ private void OnTagDetected(object? sender, TagDetectedEventArgs e)
 
 | 예제 | 경로 | 설명 |
 |------|------|------|
-| 01-HelloWorld | `samples/net4x/01-HelloWorld/` | 연결, UID 폴링 루프 |
-| 02-MifareClassic | `samples/net4x/02-MifareClassic/` | 인증, 블록 읽기/쓰기 |
-| 03-AutoRead | `samples/net4x/03-AutoRead/` | 이벤트 기반 카드 감지 |
-| 04-WinFormsIntegration | `samples/net4x/04-WinFormsIntegration/` | WinForms Invoke 패턴 |
+| 01-HelloWorld | `NET4x-Samples/01-HelloWorld/` | 연결, UID 폴링 루프 |
+| 02-MifareClassic | `NET4x-Samples/02-MifareClassic/` | 인증, 블록 읽기/쓰기 |
+| 03-AutoRead | `NET4x-Samples/03-AutoRead/` | 이벤트 기반 카드 감지 |
+| 04-WinFormsIntegration | `NET4x-Samples/04-WinFormsIntegration/` | WinForms Invoke 패턴 |
 
 ```bash
 # 빌드
-dotnet build samples/net4x/01-HelloWorld/HelloWorld.Net4x.csproj
+dotnet build NET4x-Samples/01-HelloWorld/HelloWorld.Net4x.csproj
 
 # 실행
-dotnet run --project samples/net4x/01-HelloWorld/HelloWorld.Net4x.csproj -- COM3
+dotnet run --project NET4x-Samples/01-HelloWorld/HelloWorld.Net4x.csproj -- COM3
 ```
 
 ---
@@ -189,9 +189,9 @@ dotnet run --project samples/net4x/01-HelloWorld/HelloWorld.Net4x.csproj -- COM3
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net472</TargetFramework>
-    <LangVersion>latest</LangVersion>   <!-- C# 12 문법 활성화 -->
+    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <ImplicitUsings>disable</ImplicitUsings>  <!-- using 명시 필요 -->
+    <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Iksung.Reader" Version="0.*" />
