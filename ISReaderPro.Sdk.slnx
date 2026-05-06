@@ -1,6 +1,25 @@
 <Solution>
   <Folder Name="/samples/">
     <Project Path="samples/HelloWorld.Console/HelloWorld.Console.csproj" />
+    <Project Path="samples/01-ReadAnyUid/ReadAnyUid.csproj" />
+    <Project Path="samples/02-Iso14443a/Iso14443a.csproj" />
+    <Project Path="samples/03-MifareClassic/MifareClassic.csproj" />
+    <Project Path="samples/04-MifareUltralight/MifareUltralight.csproj" />
+    <Project Path="samples/05-Iso15693/Iso15693.csproj" />
+    <Project Path="samples/06-AutoRead/AutoRead.csproj" />
+    <Project Path="samples/07-Desfire/Desfire.csproj" />
+    <Project Path="samples/08-NTag213/NTag213.csproj" />
+    <Project Path="samples/09-Lf125KhzAdvanced/Lf125KhzAdvanced.csproj" />
+    <Project Path="samples/10-Iso7816/Iso7816.csproj" />
+    <Project Path="samples/11-Bluetooth/Bluetooth.csproj" />
+    <Project Path="samples/12-Relay/Relay.csproj" />
+    <Project Path="samples/13-CommandConsole/CommandConsole.csproj" />
+  </Folder>
+  <Folder Name="/samples/net4x/">
+    <Project Path="samples/net4x/01-HelloWorld/HelloWorld.Net4x.csproj" />
+    <Project Path="samples/net4x/02-MifareClassic/MifareClassic.Net4x.csproj" />
+    <Project Path="samples/net4x/03-AutoRead/AutoRead.Net4x.csproj" />
+    <Project Path="samples/net4x/04-WinFormsIntegration/WinFormsIntegration.Net4x.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Iksung.Reader/Iksung.Reader.csproj" />

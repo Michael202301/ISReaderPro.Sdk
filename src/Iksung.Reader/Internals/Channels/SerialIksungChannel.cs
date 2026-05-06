@@ -21,7 +21,7 @@ internal sealed class SerialIksungChannel : IIksungChannel
     private long _lastRxTick;
 
     private readonly SemaphoreSlim _sendLock = new(1, 1);
-    private TaskCompletionSource<IksungPacket>? _pendingResponse;
+    private (TaskCompletionSource<IksungPacket> Tcs, byte Cmd1, byte Cmd2)? _pending;
 
     public bool IsConnected => _port?.IsOpen == true;
 
@@ -99,8 +99,8 @@ internal sealed class SerialIksungChannel : IIksungChannel
         try { _port.Close(); } catch { }
         _port.Dispose();
         _port = null;
-        _pendingResponse?.TrySetCanceled();
-        _pendingResponse = null;
+        _pending?.Tcs.TrySetCanceled();
+        _pending = null;
         ConnectionChanged?.Invoke(this, false);
     }
 
@@ -118,8 +118,10 @@ internal sealed class SerialIksungChannel : IIksungChannel
         await _sendLock.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            var tcs = new TaskCompletionSource<IksungPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _pendingResponse = tcs;
+            var tcs   = new TaskCompletionSource<IksungPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
+            byte rCmd1 = request.Length > 1 ? request[1] : (byte)0;
+            byte rCmd2 = request.Length > 2 ? request[2] : (byte)0;
+            _pending = (tcs, rCmd1, rCmd2);
             Send(request);
 
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -141,7 +143,7 @@ internal sealed class SerialIksungChannel : IIksungChannel
         }
         finally
         {
-            _pendingResponse = null;
+            _pending = null;
             _sendLock.Release();
         }
     }
@@ -230,8 +232,8 @@ internal sealed class SerialIksungChannel : IIksungChannel
         try { port.ErrorReceived -= OnErrorReceived; } catch { }
         try { port.Close(); } catch { }
         try { port.Dispose(); } catch { }
-        _pendingResponse?.TrySetCanceled();
-        _pendingResponse = null;
+        _pending?.Tcs.TrySetCanceled();
+        _pending = null;
         ConnectionChanged?.Invoke(this, false);
     }
 
@@ -269,9 +271,11 @@ internal sealed class SerialIksungChannel : IIksungChannel
 
     private void DeliverPacket(IksungPacket pkt)
     {
-        var pending = _pendingResponse;
-        if (pending != null && pkt.Protocol != PacketProtocol.Invalid)
-            pending.TrySetResult(pkt);
+        var p = _pending;
+        if (p != null && pkt.Protocol != PacketProtocol.Invalid
+                      && pkt.Cmd1 == p.Value.Cmd1
+                      && (pkt.Cmd2 & ~Constants.BUZZER_FLAG) == p.Value.Cmd2)
+            p.Value.Tcs.TrySetResult(pkt);
         else
             PacketReceived?.Invoke(this, pkt);
     }

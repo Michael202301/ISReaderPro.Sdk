@@ -68,7 +68,12 @@ internal sealed class SocketIksungChannel : IIksungChannel
         {
             try
             {
+#if NET5_0_OR_GREATER
                 var tcpClient = await _listener!.AcceptTcpClientAsync(ct).ConfigureAwait(false);
+#else
+                var tcpClient = await _listener!.AcceptTcpClientAsync().ConfigureAwait(false);
+                ct.ThrowIfCancellationRequested();
+#endif
                 string ep = tcpClient.Client.RemoteEndPoint?.ToString() ?? "?";
                 lock (_clientsLock) _serverClients.Add(tcpClient);
                 ServerClientAccepted?.Invoke(this, ep);
@@ -102,7 +107,11 @@ internal sealed class SocketIksungChannel : IIksungChannel
             _client    = new TcpClient();
             _clientCts = new CancellationTokenSource();
             using var timeout = new CancellationTokenSource(timeoutMs);
+#if NET5_0_OR_GREATER
             await _client.ConnectAsync(ip, port, timeout.Token).ConfigureAwait(false);
+#else
+            await _client.ConnectAsync(ip, port).ConfigureAwait(false);
+#endif
             NotifyConnectionChanged();
             _ = ReceiveLoopAsync(_client, isServerClient: false, _clientCts.Token, null);
             return true;
@@ -128,8 +137,8 @@ internal sealed class SocketIksungChannel : IIksungChannel
 
     public void Disconnect()
     {
-        _pendingResponse?.TrySetCanceled();
-        _pendingResponse = null;
+        _pending?.Tcs.TrySetCanceled();
+        _pending = null;
         DisconnectClient();
         StopServer();
     }
@@ -196,15 +205,17 @@ internal sealed class SocketIksungChannel : IIksungChannel
     public void SocketInit() => Disconnect();
 
     private readonly SemaphoreSlim _sendLock = new(1, 1);
-    private TaskCompletionSource<IksungPacket>? _pendingResponse;
+    private (TaskCompletionSource<IksungPacket> Tcs, byte Cmd1, byte Cmd2)? _pending;
 
     public async Task<byte[]> SendAndReceiveAsync(byte[] request, int timeoutMs, CancellationToken ct = default)
     {
         await _sendLock.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            var tcs = new TaskCompletionSource<IksungPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _pendingResponse = tcs;
+            var tcs   = new TaskCompletionSource<IksungPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
+            byte rCmd1 = request.Length > 1 ? request[1] : (byte)0;
+            byte rCmd2 = request.Length > 2 ? request[2] : (byte)0;
+            _pending = (tcs, rCmd1, rCmd2);
             Send(request);
 
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -226,7 +237,7 @@ internal sealed class SocketIksungChannel : IIksungChannel
         }
         finally
         {
-            _pendingResponse = null;
+            _pending = null;
             _sendLock.Release();
         }
     }
@@ -355,7 +366,11 @@ internal sealed class SocketIksungChannel : IIksungChannel
                 using (var iterCts = CancellationTokenSource.CreateLinkedTokenSource(ct))
                 {
                     iterCts.CancelAfter(200);
+#if NET5_0_OR_GREATER
                     try { n = await stream.ReadAsync(readBuf.AsMemory(0, readBuf.Length), iterCts.Token).ConfigureAwait(false); }
+#else
+                    try { n = await stream.ReadAsync(readBuf, 0, readBuf.Length, iterCts.Token).ConfigureAwait(false); }
+#endif
                     catch (OperationCanceledException) when (!ct.IsCancellationRequested) { continue; }
                 }
                 if (n == 0) break;
@@ -375,7 +390,7 @@ internal sealed class SocketIksungChannel : IIksungChannel
                 if (!string.IsNullOrEmpty(endpoint))
                 {
                     if (SelectedServerClient == endpoint) SelectedServerClient = null;
-                    ServerClientDisconnected?.Invoke(this, endpoint);
+                    ServerClientDisconnected?.Invoke(this, endpoint!);
                 }
                 NotifyConnectionChanged();
             }
@@ -422,9 +437,11 @@ internal sealed class SocketIksungChannel : IIksungChannel
 
     private void DeliverPacket(IksungPacket pkt)
     {
-        var pending = _pendingResponse;
-        if (pending != null && pkt.Protocol != PacketProtocol.Invalid)
-            pending.TrySetResult(pkt);
+        var p = _pending;
+        if (p != null && pkt.Protocol != PacketProtocol.Invalid
+                      && pkt.Cmd1 == p.Value.Cmd1
+                      && (pkt.Cmd2 & ~Constants.BUZZER_FLAG) == p.Value.Cmd2)
+            p.Value.Tcs.TrySetResult(pkt);
         else
             PacketReceived?.Invoke(this, pkt);
     }

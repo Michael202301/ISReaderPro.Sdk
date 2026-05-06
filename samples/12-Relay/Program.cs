@@ -1,0 +1,161 @@
+/*
+ * Sample 12 – Relay / Digital I/O
+ * ==================================
+ * IS-3500K의 릴레이 모듈 제어 예제:
+ *   1. 모든 입력 핀(DIN 1~5) 상태 읽기
+ *   2. 모든 릴레이 출력(RELAY 1~8) 상태 읽기
+ *   3. 릴레이 순차 ON (1→2→3→…→8, 300ms 간격)
+ *   4. 모든 릴레이 OFF
+ *   5. 릴레이 순차 OFF (8→7→6→…→1, 300ms 간격)
+ *   6. 전체 ON / 전체 OFF 토글
+ *   7. 자동 꺼짐 타이머 설정 예시 (Relay 1, 2000ms)
+ *   8. 입력 실시간 모니터링 루프
+ *
+ * 사용법:
+ *   dotnet run -- COM3
+ *   dotnet run -- COM3 115200 monitor    (입력 모니터링 전용)
+ */
+
+using Iksung.Reader;
+using Iksung.Reader.Exceptions;
+
+string portName = args.Length > 0 ? args[0] : "COM3";
+bool monitorOnly = args.Length > 2 && args[2].Equals("monitor", StringComparison.OrdinalIgnoreCase);
+
+Console.WriteLine($"[IKSUNG] Connecting to {portName}...");
+await using var reader = await IksungReader.ConnectSerialAsync(portName);
+Console.WriteLine($"[IKSUNG] Firmware : {await reader.ReadVersionAsync()}\n");
+
+try
+{
+    if (monitorOnly)
+    {
+        await RunMonitorLoop(reader);
+        return;
+    }
+
+    // ── 1. 모든 입력 핀 상태 ──
+    Console.WriteLine("── DIN (Digital Input) 1~5 ────────────────────");
+    byte inputMask = (await reader.RelayReadAllInputsAsync())[0];
+    for (byte i = 1; i <= 5; i++)
+    {
+        bool state = IksungReader.GetInputState(inputMask, i);
+        Console.WriteLine($"  DIN {i} : {(state ? "HIGH ●" : "LOW  ○")}");
+    }
+
+    // ── 2. 모든 릴레이 출력 상태 ──
+    Console.WriteLine("\n── RELAY Output 1~8 ────────────────────────────");
+    byte relayMask = (await reader.RelayReadAllOutputsAsync())[0];
+    for (byte i = 1; i <= 8; i++)
+    {
+        bool state = IksungReader.GetRelayState(relayMask, i);
+        Console.WriteLine($"  RELAY {i} : {(state ? "ON  ●" : "OFF ○")}");
+    }
+
+    // ── 3. 릴레이 순차 ON (1→8) ──
+    Console.WriteLine("\n── Sequential ON (RELAY 1 → 8) ─────────────────");
+    for (byte i = 1; i <= 8; i++)
+    {
+        await reader.RelayWriteOutputAsync(i, true);
+        Console.WriteLine($"  RELAY {i} → ON");
+        await Task.Delay(300);
+    }
+
+    // ── 4. 전체 OFF ──
+    Console.WriteLine("\n── All RELAY OFF ────────────────────────────────");
+    await reader.RelayAllOffAsync();
+    Console.WriteLine("  All relays turned OFF.");
+    await Task.Delay(500);
+
+    // ── 5. 릴레이 역순 ON (8→1) ──
+    Console.WriteLine("\n── Sequential ON (RELAY 8 → 1) ─────────────────");
+    for (byte i = 8; i >= 1; i--)
+    {
+        await reader.RelayWriteOutputAsync(i, true);
+        Console.WriteLine($"  RELAY {i} → ON");
+        await Task.Delay(300);
+    }
+
+    // ── 6. 전체 OFF ──
+    Console.WriteLine("\n── All RELAY OFF ────────────────────────────────");
+    await reader.RelayAllOffAsync();
+    Console.WriteLine("  All relays turned OFF.");
+    await Task.Delay(500);
+
+    // ── 7. 전체 ON → 잠시 대기 → 전체 OFF ──
+    Console.WriteLine("\n── All ON → 1s → All OFF ────────────────────────");
+    await reader.RelayAllOnAsync();
+    Console.WriteLine("  All relays → ON");
+    await Task.Delay(1000);
+    await reader.RelayAllOffAsync();
+    Console.WriteLine("  All relays → OFF");
+    await Task.Delay(500);
+
+    // ── 8. 자동 꺼짐 타이머 (RELAY 1 : 2000ms 후 자동 OFF) ──
+    Console.WriteLine("\n── Auto-Off Timer: RELAY 1 for 2000ms ───────────");
+    await reader.RelaySetAutoOffTimeAsync(1, 2000);
+    await reader.RelayWriteOutputAsync(1, true);
+    Console.WriteLine("  RELAY 1 → ON (will auto-off in ~2s)");
+    await Task.Delay(2500);
+    byte afterMask = (await reader.RelayReadAllOutputsAsync())[0];
+    bool relay1State = IksungReader.GetRelayState(afterMask, 1);
+    Console.WriteLine($"  RELAY 1 state after 2.5s : {(relay1State ? "ON (not auto-off?)" : "OFF ✓")}");
+
+    // ── 9. 입력 핀 비트마스크 직접 표시 ──
+    Console.WriteLine("\n── Input bitmask (raw) ──────────────────────────");
+    byte rawInput = (await reader.RelayReadAllInputsAsync())[0];
+    Console.WriteLine($"  Raw byte : 0x{rawInput:X2}  (binary: {ToBinary8(rawInput)})");
+
+    Console.WriteLine("\n[IKSUNG] Relay control complete.");
+    Console.WriteLine("\nPress any key to start input monitoring (Ctrl+C to exit)...");
+    Console.ReadKey(true);
+
+    await RunMonitorLoop(reader);
+}
+catch (IksungProtocolException ex) { Console.WriteLine($"Error: {ex.Message}"); }
+catch (IksungTimeoutException ex)  { Console.WriteLine($"Timeout: {ex.Message}"); }
+
+// ── 입력 모니터링 루프 ──
+static async Task RunMonitorLoop(IksungReader reader)
+{
+    Console.WriteLine("\n[IKSUNG] Monitoring DIN inputs (Ctrl+C to exit)...\n");
+    using var cts = new CancellationTokenSource();
+    Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
+
+    byte prevMask = 0xFF; // 초기값을 강제 출력 트리거로 사용
+    while (!cts.Token.IsCancellationRequested)
+    {
+        try
+        {
+            byte[] result = await reader.RelayReadAllInputsAsync(500, cts.Token);
+            byte mask = result.Length > 0 ? result[0] : (byte)0;
+
+            if (mask != prevMask)
+            {
+                string ts = DateTime.Now.ToString("HH:mm:ss.fff");
+                Console.Write($"{ts}  DIN: ");
+                for (byte i = 1; i <= 5; i++)
+                {
+                    bool state = IksungReader.GetInputState(mask, i);
+                    Console.Write($"[{i}:{(state ? "H" : "L")}] ");
+                }
+                Console.WriteLine($" (0x{mask:X2})");
+                prevMask = mask;
+            }
+
+            await Task.Delay(50, cts.Token);
+        }
+        catch (OperationCanceledException) { break; }
+        catch (IksungTimeoutException)     { await Task.Delay(200, cts.Token); }
+    }
+
+    Console.WriteLine("\n[IKSUNG] Monitoring stopped.");
+}
+
+static string ToBinary8(byte b)
+{
+    var sb = new System.Text.StringBuilder();
+    for (int i = 7; i >= 0; i--)
+        sb.Append((b >> i) & 1);
+    return sb.ToString();
+}
