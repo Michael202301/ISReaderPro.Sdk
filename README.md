@@ -97,15 +97,26 @@ sudo usermod -a -G dialout $USER
 
 | 번호 | 예제 | 설명 |
 |------|------|------|
-| 01 | HelloWorld | 연결 + UID 폴링 |
-| 02 | MifareClassic | 인증 + 블록 읽기/쓰기 |
-| 03 | AutoRead | 이벤트 기반 감지 |
-| 04 | WinFormsIntegration | WinForms `Invoke()` 패턴 |
+| - | HelloWorld | 연결, 버전, 고유 ID |
+| 01 | ReadAnyUid | UID 폴링 (ISO14443A/B, ISO15693, LF) |
+| 02 | Iso14443a | ISO 14443-A Layer-3/4 + APDU |
+| 03 | MifareClassic | 인증 + 블록 읽기/쓰기 |
+| 04 | MifareUltralight | 페이지 덤프/쓰기 |
+| 05 | Iso15693 | 멀티블록 읽기 |
+| 06 | AutoRead | 이벤트 기반 자동 인식 |
+| 07 | Desfire | DESFire EV1/EV2 전체 워크플로 |
+| 08 | NTag213 | NTag213/215/216 버전/서명/카운터 |
+| 09 | Lf125KhzAdvanced | EM410X, ISO11784, SECOM, Temic |
+| 10 | Iso7816 | USIM ATR + TPDU + ICCID 읽기 |
+| 11 | Bluetooth | BLE 이름/MAC/TX파워/GAP 설정 |
+| 12 | Relay | 릴레이 I/O 제어 |
+| 13 | CommandConsole | 대화형 RAW 명령 콘솔 |
+| - | WinFormsIntegration | WinForms `Invoke()` 패턴 |
 
 ```bash
 # 실행 예시
 dotnet run --project NET8-Samples/01-ReadAnyUid -- COM3
-dotnet run --project NET4x-Samples/01-HelloWorld -- COM3
+dotnet run --project NET4x-Samples/01-ReadAnyUid -- COM3
 ```
 
 ---

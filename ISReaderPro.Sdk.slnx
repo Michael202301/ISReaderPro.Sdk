@@ -16,9 +16,21 @@
     <Project Path="NET8-Samples/13-CommandConsole/CommandConsole.csproj" />
   </Folder>
   <Folder Name="/NET4x-Samples/">
+    <Project Path="NET4x-Samples/HelloWorld.Console/HelloWorld.Console.Net4x.csproj" />
+    <Project Path="NET4x-Samples/01-ReadAnyUid/ReadAnyUid.Net4x.csproj" />
+    <Project Path="NET4x-Samples/02-Iso14443a/Iso14443a.Net4x.csproj" />
+    <Project Path="NET4x-Samples/03-MifareClassic/MifareClassic.Net4x.csproj" />
+    <Project Path="NET4x-Samples/04-MifareUltralight/MifareUltralight.Net4x.csproj" />
+    <Project Path="NET4x-Samples/05-Iso15693/Iso15693.Net4x.csproj" />
+    <Project Path="NET4x-Samples/06-AutoRead/AutoRead.Net4x.csproj" />
+    <Project Path="NET4x-Samples/07-Desfire/Desfire.Net4x.csproj" />
+    <Project Path="NET4x-Samples/08-NTag213/NTag213.Net4x.csproj" />
+    <Project Path="NET4x-Samples/09-Lf125KhzAdvanced/Lf125KhzAdvanced.Net4x.csproj" />
+    <Project Path="NET4x-Samples/10-Iso7816/Iso7816.Net4x.csproj" />
+    <Project Path="NET4x-Samples/11-Bluetooth/Bluetooth.Net4x.csproj" />
+    <Project Path="NET4x-Samples/12-Relay/Relay.Net4x.csproj" />
+    <Project Path="NET4x-Samples/13-CommandConsole/CommandConsole.Net4x.csproj" />
     <Project Path="NET4x-Samples/01-HelloWorld/HelloWorld.Net4x.csproj" />
-    <Project Path="NET4x-Samples/02-MifareClassic/MifareClassic.Net4x.csproj" />
-    <Project Path="NET4x-Samples/03-AutoRead/AutoRead.Net4x.csproj" />
     <Project Path="NET4x-Samples/04-WinFormsIntegration/WinFormsIntegration.Net4x.csproj" />
   </Folder>
   <Folder Name="/src/">
