@@ -8,6 +8,7 @@
 
 | 문서 | 내용 |
 |------|------|
+| [00. 예제 프로젝트 생성 가이드](00-project-setup-guide.md) | 프로젝트 생성·빌드·실행 단계별 설명 |
 | [01. 시작하기](01-getting-started.md) | 설치, 연결, Hello World |
 | [02. 공통 명령](02-common-commands.md) | 버전 읽기, RF On/Off, UID |
 | [03. ISO 14443 A/B](03-iso14443ab.md) | 비접촉 카드 활성화 및 APDU 교환 |
