@@ -28,11 +28,6 @@ This SDK may use the following third-party components when their respective
 channels are activated. Users are responsible for complying with each
 component's license:
 
-- **FTDI D2XX driver** (`ftd2xx.dll` / `libftd2xx.so` / `libftd2xx.dylib`) —
-  Used by `Iksung.Reader.Channels.Ftdi`. Distributed under FTDI's Closed-Source
-  Distributable License. See https://ftdichip.com/drivers/d2xx-drivers/ for
-  current terms. Users must obtain the FTDI driver separately.
-
 - **System.IO.Ports** — .NET BCL extension package. MIT License.
 
 - **PC/SC native libraries** (`winscard.dll` / `libpcsclite.so`) —
