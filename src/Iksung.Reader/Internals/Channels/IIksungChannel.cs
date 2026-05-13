@@ -15,6 +15,10 @@ internal interface IIksungChannel : IDisposable
     event EventHandler<IksungPacket>? PacketReceived;
     event EventHandler<bool>?         ConnectionChanged;
 
+    // Fired with the on-wire raw bytes of every received packet (solicited + unsolicited).
+    // Used by IksungReader to surface RawPacketReceived when LogRawPackets = true.
+    event EventHandler<byte[]>? RawDataReceived;
+
     // Fire-and-forget send (for commands that don't need a response, e.g. buzzer).
     void Send(byte[] data);
 
@@ -25,6 +29,10 @@ internal interface IIksungChannel : IDisposable
     Task<byte[]> SendAndReceiveAsync(byte[] request, int timeoutMs, CancellationToken ct = default);
 
     void Disconnect();
+
+    // Re-establish connection using the last configuration (port name, IP, etc.).
+    // Returns true if reconnection succeeded. Returns false without throwing on failure.
+    Task<bool> ReconnectAsync(CancellationToken ct = default);
 
     // Raw byte I/O for firmware update (XCP / IS-Update). Pauses normal packet parsing.
     IDisposable BeginRawIo();

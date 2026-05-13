@@ -1,42 +1,154 @@
 <Solution>
+  <StartupProjects>
+    <StartupProject Path="NET4x-Samples/04-MifareUltralight/MifareUltralight.Net4x.csproj" />
+  </StartupProjects>
   <Folder Name="/NET8-Samples/">
-    <Project Path="NET8-Samples/HelloWorld.Console/HelloWorld.Console.csproj" />
-    <Project Path="NET8-Samples/01-ReadAnyUid/ReadAnyUid.csproj" />
-    <Project Path="NET8-Samples/02-Iso14443a/Iso14443a.csproj" />
-    <Project Path="NET8-Samples/03-MifareClassic/MifareClassic.csproj" />
-    <Project Path="NET8-Samples/04-MifareUltralight/MifareUltralight.csproj" />
-    <Project Path="NET8-Samples/05-Iso15693/Iso15693.csproj" />
-    <Project Path="NET8-Samples/06-AutoRead/AutoRead.csproj" />
-    <Project Path="NET8-Samples/07-Desfire/Desfire.csproj" />
-    <Project Path="NET8-Samples/08-NTag213/NTag213.csproj" />
-    <Project Path="NET8-Samples/09-Lf125KhzAdvanced/Lf125KhzAdvanced.csproj" />
-    <Project Path="NET8-Samples/10-Iso7816/Iso7816.csproj" />
-    <Project Path="NET8-Samples/11-Bluetooth/Bluetooth.csproj" />
-    <Project Path="NET8-Samples/12-Relay/Relay.csproj" />
-    <Project Path="NET8-Samples/13-CommandConsole/CommandConsole.csproj" />
+    <Project Path="NET8-Samples/01-ReadAnyUid/ReadAnyUid.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET8-Samples/02-Iso14443a/Iso14443a.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET8-Samples/03-MifareClassic/MifareClassic.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET8-Samples/04-MifareUltralight/MifareUltralight.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET8-Samples/05-Iso15693/Iso15693.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET8-Samples/06-AutoRead/AutoRead.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET8-Samples/07-Desfire/Desfire.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET8-Samples/08-NTag213/NTag213.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET8-Samples/09-Lf125KhzAdvanced/Lf125KhzAdvanced.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET8-Samples/10-Iso7816/Iso7816.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET8-Samples/11-Bluetooth/Bluetooth.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET8-Samples/12-Relay/Relay.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET8-Samples/13-CommandConsole/CommandConsole.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET8-Samples/14-SystemFeatures/SystemFeatures.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET8-Samples/HelloWorld.Console/HelloWorld.Console.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
   </Folder>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
   <Folder Name="/NET4x-Samples/">
-    <Project Path="NET4x-Samples/HelloWorld.Console/HelloWorld.Console.Net4x.csproj" />
-    <Project Path="NET4x-Samples/01-ReadAnyUid/ReadAnyUid.Net4x.csproj" />
-    <Project Path="NET4x-Samples/02-Iso14443a/Iso14443a.Net4x.csproj" />
-    <Project Path="NET4x-Samples/03-MifareClassic/MifareClassic.Net4x.csproj" />
-    <Project Path="NET4x-Samples/04-MifareUltralight/MifareUltralight.Net4x.csproj" />
-    <Project Path="NET4x-Samples/05-Iso15693/Iso15693.Net4x.csproj" />
-    <Project Path="NET4x-Samples/06-AutoRead/AutoRead.Net4x.csproj" />
-    <Project Path="NET4x-Samples/07-Desfire/Desfire.Net4x.csproj" />
-    <Project Path="NET4x-Samples/08-NTag213/NTag213.Net4x.csproj" />
-    <Project Path="NET4x-Samples/09-Lf125KhzAdvanced/Lf125KhzAdvanced.Net4x.csproj" />
-    <Project Path="NET4x-Samples/10-Iso7816/Iso7816.Net4x.csproj" />
-    <Project Path="NET4x-Samples/11-Bluetooth/Bluetooth.Net4x.csproj" />
-    <Project Path="NET4x-Samples/12-Relay/Relay.Net4x.csproj" />
-    <Project Path="NET4x-Samples/13-CommandConsole/CommandConsole.Net4x.csproj" />
-    <Project Path="NET4x-Samples/01-HelloWorld/HelloWorld.Net4x.csproj" />
-    <Project Path="NET4x-Samples/04-WinFormsIntegration/WinFormsIntegration.Net4x.csproj" />
+    <Project Path="NET4x-Samples/01-HelloWorld/HelloWorld.Net4x.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET4x-Samples/01-ReadAnyUid/ReadAnyUid.Net4x.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET4x-Samples/02-Iso14443a/Iso14443a.Net4x.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET4x-Samples/03-MifareClassic/MifareClassic.Net4x.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET4x-Samples/04-MifareUltralight/MifareUltralight.Net4x.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET4x-Samples/04-WinFormsIntegration/WinFormsIntegration.Net4x.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET4x-Samples/05-Iso15693/Iso15693.Net4x.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET4x-Samples/06-AutoRead/AutoRead.Net4x.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET4x-Samples/07-Desfire/Desfire.Net4x.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET4x-Samples/08-NTag213/NTag213.Net4x.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET4x-Samples/09-Lf125KhzAdvanced/Lf125KhzAdvanced.Net4x.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET4x-Samples/10-Iso7816/Iso7816.Net4x.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET4x-Samples/11-Bluetooth/Bluetooth.Net4x.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET4x-Samples/12-Relay/Relay.Net4x.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET4x-Samples/13-CommandConsole/CommandConsole.Net4x.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET4x-Samples/14-SystemFeatures/SystemFeatures.Net4x.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="NET4x-Samples/HelloWorld.Console/HelloWorld.Console.Net4x.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/Iksung.Reader/Iksung.Reader.csproj" />
+    <Project Path="src/Iksung.Reader/Iksung.Reader.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Iksung.Reader.Tests/Iksung.Reader.Tests.csproj" />
+    <Project Path="tests/Iksung.Reader.Tests/Iksung.Reader.Tests.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
   </Folder>
 </Solution>

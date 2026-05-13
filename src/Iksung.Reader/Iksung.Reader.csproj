@@ -20,6 +20,7 @@
     <PackageProjectUrl>https://github.com/iksung-electronics/iksung-reader-sdk</PackageProjectUrl>
     <RepositoryUrl>https://github.com/iksung-electronics/iksung-reader-sdk</RepositoryUrl>
     <PackageTags>nfc;rfid;iksung;reader;is-3500</PackageTags>
+    <Platforms>AnyCPU;x86;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

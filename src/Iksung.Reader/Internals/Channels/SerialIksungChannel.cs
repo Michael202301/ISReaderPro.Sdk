@@ -23,11 +23,19 @@ internal sealed class SerialIksungChannel : IIksungChannel
     private readonly SemaphoreSlim _sendLock = new(1, 1);
     private (TaskCompletionSource<IksungPacket> Tcs, byte Cmd1, byte Cmd2)? _pending;
 
+    // Guard flag: prevents DataReceived from touching the port while Close/Dispose is running.
+    // .NET Framework SerialPort has a well-known race: if DataReceived is executing on a
+    // ThreadPool thread while Close() is called on another thread, the native handle becomes
+    // invalid and causes 0xC0000005 (ACCESS_VIOLATION). Setting _closing = true and checking
+    // it at the top of OnDataReceived prevents the handler from using a closing port.
+    private volatile bool _closing;
+
     public bool IsConnected => _port?.IsOpen == true;
 
     public event EventHandler<IksungPacket>? PacketReceived;
     public event EventHandler<IksungPacket>? TxPacketSent;
     public event EventHandler<bool>?         ConnectionChanged;
+    public event EventHandler<byte[]>?       RawDataReceived;
 
     public SerialIksungChannel(string portName, int baudRate,
         int dataBits = 8, StopBits stopBits = StopBits.One,
@@ -94,11 +102,16 @@ internal sealed class SerialIksungChannel : IIksungChannel
     public void Disconnect()
     {
         if (_port == null) return;
+        _closing = true;                            // signal OnDataReceived to bail out early
         _port.DataReceived  -= OnDataReceived;
         _port.ErrorReceived -= OnErrorReceived;
-        try { _port.Close(); } catch { }
-        _port.Dispose();
-        _port = null;
+        // Brief pause so any DataReceived handler already running on the ThreadPool has time
+        // to observe _closing = true and return before we pull the native handle out from under it.
+        Thread.Sleep(50);
+        try { _port.Close();   } catch { }
+        try { _port.Dispose(); } catch { }
+        _port    = null;
+        _closing = false;
         _pending?.Tcs.TrySetCanceled();
         _pending = null;
         ConnectionChanged?.Invoke(this, false);
@@ -227,11 +240,14 @@ internal sealed class SerialIksungChannel : IIksungChannel
     {
         var port = _port;
         if (port == null) return;
-        _port = null;
+        _closing = true;                            // guard before touching the port
+        _port    = null;
         try { port.DataReceived  -= OnDataReceived; }  catch { }
         try { port.ErrorReceived -= OnErrorReceived; } catch { }
-        try { port.Close(); } catch { }
+        Thread.Sleep(50);
+        try { port.Close();   } catch { }
         try { port.Dispose(); } catch { }
+        _closing = false;
         _pending?.Tcs.TrySetCanceled();
         _pending = null;
         ConnectionChanged?.Invoke(this, false);
@@ -239,6 +255,7 @@ internal sealed class SerialIksungChannel : IIksungChannel
 
     private void OnDataReceived(object sender, SerialDataReceivedEventArgs e)
     {
+        if (_closing) return;           // port is being closed — bail out immediately
         var port = _port;
         if (port == null) return;
         if (_rawIoActive) return;
@@ -271,6 +288,9 @@ internal sealed class SerialIksungChannel : IIksungChannel
 
     private void DeliverPacket(IksungPacket pkt)
     {
+        if (pkt.LowData.Length > 0)
+            RawDataReceived?.Invoke(this, pkt.LowData);
+
         var p = _pending;
         if (p != null && pkt.Protocol != PacketProtocol.Invalid
                       && pkt.Cmd1 == p.Value.Cmd1
@@ -278,6 +298,17 @@ internal sealed class SerialIksungChannel : IIksungChannel
             p.Value.Tcs.TrySetResult(pkt);
         else
             PacketReceived?.Invoke(this, pkt);
+    }
+
+    public async Task<bool> ReconnectAsync(CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+        try
+        {
+            Configure(_portName, _baudRate, _dataBits, _stopBits, _parity, _handshake);
+            return await OpenAsync().ConfigureAwait(false);
+        }
+        catch { return false; }
     }
 
     private readonly List<byte> _invalidAccumulator = new(256);

@@ -39,6 +39,7 @@ internal sealed class SocketIksungChannel : IIksungChannel
     public event EventHandler<IksungPacket>? PacketReceived;
     public event EventHandler<IksungPacket>? TxPacketSent;
     public event EventHandler<bool>?         ConnectionChanged;
+    public event EventHandler<byte[]>?       RawDataReceived;
     public event EventHandler<string>?       ServerClientAccepted;
     public event EventHandler<string>?       ServerClientDisconnected;
 
@@ -437,6 +438,9 @@ internal sealed class SocketIksungChannel : IIksungChannel
 
     private void DeliverPacket(IksungPacket pkt)
     {
+        if (pkt.LowData.Length > 0)
+            RawDataReceived?.Invoke(this, pkt.LowData);
+
         var p = _pending;
         if (p != null && pkt.Protocol != PacketProtocol.Invalid
                       && pkt.Cmd1 == p.Value.Cmd1
@@ -445,6 +449,10 @@ internal sealed class SocketIksungChannel : IIksungChannel
         else
             PacketReceived?.Invoke(this, pkt);
     }
+
+    // TCP reconnect is not supported automatically — returns false always.
+    // Users should call ConnectTcpClientAsync / StartServerAsync explicitly.
+    public Task<bool> ReconnectAsync(CancellationToken ct = default) => Task.FromResult(false);
 
     private void FlushInvalidAccumulator()
     {

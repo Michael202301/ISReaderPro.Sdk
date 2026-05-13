@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Iso14443a.Net4x": {
+      "commandName": "Project",
+      "commandLineArgs": "com31"
+    }
+  }
+}

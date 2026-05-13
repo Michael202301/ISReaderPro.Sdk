@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CommandConsole": {
+      "commandName": "Project",
+      "commandLineArgs": "com37"
+    }
+  }
+}

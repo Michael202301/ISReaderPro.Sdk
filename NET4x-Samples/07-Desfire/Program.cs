@@ -15,7 +15,21 @@
  *           Master Key가 기본값(16 × 0x00)이 아닌 경우 인증이 실패합니다.
  *
  * 사용법:
- *   Desfire.Net4x.exe COM3
+ *   Desfire.Net4x.exe COM3                      (Serial — Windows)
+ *   Desfire.Net4x.exe pcsc                      (PC/SC — 첫 번째 리더 자동 선택)
+ *   Desfire.Net4x.exe "pcsc:iksung IS-3500Z 0"  (PC/SC — 리더 이름 직접 지정)
+ *
+ * 플랫폼:
+ * ┌──────────────────────────────────────────────────────────────────────────┐
+ * │  ⚠  x86 필수 — .NET Framework 4.7.2 SerialPort 64비트 버그            │
+ * │                                                                          │
+ * │  .NET Framework 4.7.2 의 SerialPort 는 64비트 환경에서 치명적 버그    │
+ * │  (접근 위반 0xC0000005) 가 있습니다. 반드시 x86 으로 빌드·실행        │
+ * │  하십시오. x64 / Any CPU 로 실행하면 크래시가 발생합니다.              │
+ * │                                                                          │
+ * │  Visual Studio: 구성 관리자 → 플랫폼 → x86                             │
+ * │  CLI: dotnet build -p:Platform=x86 / dotnet run -p:Platform=x86       │
+ * └──────────────────────────────────────────────────────────────────────────┘
  */
 
 using System;
@@ -31,7 +45,8 @@ namespace Desfire.Net4x
     {
         static async Task Main(string[] args)
         {
-            string portName = args.Length > 0 ? args[0] : "COM3";
+            // ── 채널 선택: "pcsc" 또는 "pcsc:리더이름" → PC/SC, 그 외 → Serial ──────────
+            string firstArg = args.Length > 0 ? args[0] : "COM3";
 
             // DESFire AES-128 기본 공장 키 (16 바이트 all-zero)
             byte[] defaultAesKey = new byte[16];        // 0x00 * 16
@@ -39,11 +54,49 @@ namespace Desfire.Net4x
             const byte KeyVersion    = 0x00;
             const byte MasterKeyNo   = 0x00;
 
-            Console.WriteLine($"[IKSUNG] Connecting to {portName}...");
+            IksungReader reader;
+            if (firstArg.StartsWith("pcsc", StringComparison.OrdinalIgnoreCase))
+            {
+                string? readerName = firstArg.Contains(':')
+                    ? firstArg.Substring(firstArg.IndexOf(':') + 1).Trim()
+                    : null;
+                if (readerName == null)
+                {
+                    var readers = IksungPcscDiscovery.GetAvailableReaders();
+                    if (readers.Count == 0)
+                    {
+                        Console.WriteLine("[ERROR] PC/SC 리더를 찾을 수 없습니다.");
+                        Console.WriteLine("  - USB CCID 리더(IS-3500Z 등)가 연결되어 있는지 확인하세요.");
+                        Console.WriteLine("  - Windows Smart Card Service(SCardSvr)가 실행 중인지 확인하세요.");
+                        return;
+                    }
+                    readerName = readers[0];
+                    Console.WriteLine("[IKSUNG] PC/SC 리더 자동 선택: " + readerName);
+                }
+                else
+                {
+                    Console.WriteLine("[IKSUNG] PC/SC 연결: " + readerName);
+                }
+                reader = await IksungReader.ConnectPcscAsync(readerName);
+            }
+            else
+            {
+                Console.WriteLine("[IKSUNG] Serial 연결: " + firstArg);
+                reader = await IksungReader.ConnectSerialAsync(firstArg);
+            }
 
-            var reader = await IksungReader.ConnectSerialAsync(portName);
             try
             {
+                // ── 연결 확인 ─────────────────────────────────────────────────
+                Console.WriteLine("[IKSUNG] 리더기 응답 확인 중...");
+                bool alive = await reader.PingAsync(timeoutMs: 500);
+                if (!alive)
+                {
+                    Console.WriteLine("[ERROR] 리더기가 응답하지 않습니다. (연결: " + firstArg + ")");
+                    Console.WriteLine("  - 리더기 전원을 확인하세요.");
+                    Console.WriteLine("  - 케이블 연결을 확인하세요.");
+                    return;
+                }
                 Console.WriteLine($"[IKSUNG] Firmware : {await reader.ReadVersionAsync()}");
                 Console.WriteLine("[IKSUNG] Place a Mifare DESFire EV1/EV2 card. Press Ctrl+C to exit.\n");
 
