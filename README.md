@@ -87,7 +87,7 @@ sudo usermod -a -G dialout $USER
 | 06 | AutoRead | 이벤트 기반 자동 인식 |
 | 07 | Desfire | DESFire EV1/EV2/EV3 전체 워크플로 |
 | 08 | NTag213 | NTag213/215/216 버전/서명/카운터 |
-| 09 | Lf125KhzAdvanced | EM410X, ISO11784, SECOM, Temic |
+| 09 | Lf125KhzAdvanced | EM410X, ISO11784, T5577, Temic |
 | 10 | Iso7816 | USIM ATR + TPDU + ICCID 읽기 |
 | 11 | Bluetooth | BLE 이름/MAC/TX파워/GAP 설정 |
 | 12 | Relay | 릴레이 I/O 제어 |
@@ -106,7 +106,7 @@ sudo usermod -a -G dialout $USER
 | 06 | AutoRead | 이벤트 기반 자동 인식 |
 | 07 | Desfire | DESFire EV1/EV2 전체 워크플로 |
 | 08 | NTag213 | NTag213/215/216 버전/서명/카운터 |
-| 09 | Lf125KhzAdvanced | EM410X, ISO11784, SECOM, Temic |
+| 09 | Lf125KhzAdvanced | EM410X, ISO11784, T5577, Temic |
 | 10 | Iso7816 | USIM ATR + TPDU + ICCID 읽기 |
 | 11 | Bluetooth | BLE 이름/MAC/TX파워/GAP 설정 |
 | 12 | Relay | 릴레이 I/O 제어 |

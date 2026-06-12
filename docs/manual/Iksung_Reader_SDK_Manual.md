@@ -1,7 +1,7 @@
 # Iksung.Reader SDK — 통합 사용 설명서
 
 **버전:** SDK V1.0 / .NET 8 + .NET Framework 4.7.2 지원
-**문서 빌드일:** 2026-05-13
+**문서 빌드일:** 2026-05-26
 **대상:** 익성전자 NFC/RFID 리더기 응용 프로그램 개발자
 **채널 지원:** Serial (UART 115200 bps) · USB CCID (PC/SC) · TCP/IP Socket
 
@@ -1081,107 +1081,6 @@ while (!cts.Token.IsCancellationRequested)
     catch (OperationCanceledException) { break; }
 }
 ```
-
----
-
-### 6. 부저 울리기
-
-내장 부저를 짧게 울려 카드 인식 피드백을 제공합니다.
-`durationUnit` 은 100 ms 단위입니다 (기본값 2 = 약 200 ms).
-
-```csharp
-await reader.BuzzerAsync();         // 기본 약 200 ms
-await reader.BuzzerAsync(5);        // 약 500 ms
-```
-
-| 파라미터 | 기본값 | 설명 |
-|---|---|---|
-| `durationUnit` | `2` | 울림 시간 단위 (1 = 100 ms, 2 = 200 ms, …) |
-| `timeoutMs` | `1000` | 응답 대기 시간 |
-
----
-
-### 7. 자동 카드 감지 (모든 표준)
-
-카드 종류에 관계없이 현재 RF 필드의 카드 UID 와 종류를 한 번에 얻습니다.
-ISO 14443 A/B, FeliCa, ISO 15693 등 표준이 섞여 있는 환경에서 유용합니다.
-
-```csharp
-byte[] uid       = await reader.ReadAllUidAsync();       // UID 만
-byte[] typeCode  = await reader.ReadAllCardTypeAsync();  // 카드 종류 코드
-
-Console.WriteLine($"UID: {BitConverter.ToString(uid).Replace("-", "")}");
-Console.WriteLine($"카드 종류 코드: {BitConverter.ToString(typeCode)}");
-```
-
-> 카드 종류별 폴링을 명시적으로 하고 싶다면 `ReadIso14443aUidAsync` / `ReadIso14443bUidAsync` /
-> `ReadFelicaUidAsync` / `ReadIso15693UidAsync` 를 직접 호출하세요.
-
-#### FeliCa 전용 UID
-
-```csharp
-byte[] uidFelica = await reader.ReadFelicaUidAsync();
-```
-
----
-
-### 8. 카드 메타 정보 (활성화된 카드)
-
-ISO 14443-A/B 카드가 이미 활성화된 상태에서 추가 메타데이터를 조회합니다.
-`Iso14443ActivateAsync` 등으로 카드를 활성화한 직후 호출합니다 (§03 참조).
-
-```csharp
-byte[] sak     = await reader.ReadSakTypeAsync();    // SAK (Select Acknowledge) — 1 byte
-byte[] ats     = await reader.ReadAtsAsync();        // ATS (Answer To Select) — ISO 14443-4
-byte[] tagType = await reader.ReadTagTypeAsync();    // 펌웨어가 분류한 태그 타입 코드
-```
-
-| 메서드 | 용도 |
-|---|---|
-| `ReadSakTypeAsync` | Mifare Classic/Plus/DESFire 구분 (예: `0x08` = Classic 1K) |
-| `ReadAtsAsync` | Layer-4 카드의 ATS / HistoricalBytes 확인 |
-| `ReadTagTypeAsync` | 펌웨어 종합 분류 (Mifare 패밀리 / NTAG / DESFire 등) |
-
----
-
-### 9. 교통카드 일련번호
-
-국내 교통카드(T-Money / CashBee / K-Cash / RailPlus) 의 일련번호를 읽습니다.
-카드 종류를 알 수 없을 때는 `ReadAllCashSerialAsync` 로 자동 감지합니다.
-
-```csharp
-byte[] tmoney   = await reader.ReadTmoneySerialAsync();
-byte[] cashbee  = await reader.ReadCashbeeSerialAsync();
-byte[] kcash    = await reader.ReadKcashSerialAsync();
-byte[] railplus = await reader.ReadRailPlusSerialAsync();
-
-// 4 종 자동 감지 — 어떤 교통카드든 단일 호출로 일련번호 획득
-byte[] anyCash  = await reader.ReadAllCashSerialAsync();
-```
-
-> 일련번호가 BCD 또는 ASCII 인코딩이라 카드사별로 표시 방식이 다릅니다.
-> 결제 시스템과 연동하기 전에 카드사 사양서를 함께 확인하세요.
-
----
-
-### 10. Watchdog Timer (WDT) 설정
-
-리더기가 일정 시간 동안 정상 동작하지 않으면 내부 워치독으로 자동 리셋합니다.
-타임아웃 값은 펌웨어 정의 단위입니다 (제품 매뉴얼 참조).
-
-```csharp
-// 현재 설정값 읽기
-byte[] current = await reader.ReadWdtTimeoutAsync();
-Console.WriteLine($"WDT timeout: {current[0]}");
-
-// 새 값 설정 (예: 10 단위)
-await reader.WriteWdtTimeoutAsync(10);
-```
-
-| 메서드 | 용도 |
-|---|---|
-| `ReadWdtTimeoutAsync` | 현재 WDT 타임아웃 값 조회 |
-| `WriteWdtTimeoutAsync(byte timeoutValue)` | WDT 타임아웃 값 설정 (펌웨어 정의 단위) |
 
 ---
 
@@ -2655,21 +2554,25 @@ Console.WriteLine($"MAC Address: {macStr}");
 
 ---
 
-### 3. TX 파워 읽기 / 변경
+### 3. RF 파워 읽기 / 변경
 
-TX 파워는 BLE 송신 강도입니다. 높을수록 도달 거리가 길어지지만 전력 소비가 증가합니다.
+RF(TX) 파워는 BLE 송신 강도입니다. 높을수록 도달 거리가 길어지지만 전력 소비가 증가합니다.
+펌웨어는 **Central / Peripheral 각각의 인덱스**를 2바이트(`[centralIdx][peripheralIdx]`)로 다룹니다.
 
 ```csharp
-// TX 파워 읽기
-byte[] txPwr = await reader.BleReadTxPowerAsync();
-if (txPwr.Length > 0)
-{
-    string label = IksungReader.TxPowerToString(txPwr[0]);
-    Console.WriteLine($"TX Power: {label} (index={txPwr[0]})");
-}
+// RF 파워 읽기 (Central / Peripheral 개별)
+var (central, peripheral) = await reader.BleReadRfPowerAsync();
+Console.WriteLine($"Central={IksungReader.TxPowerToString(central)}, " +
+                  $"Peripheral={IksungReader.TxPowerToString(peripheral)}");
 
-// TX 파워 변경 (0~최대 인덱스, 제품마다 다름)
-await reader.BleWriteTxPowerAsync(3); // 인덱스 3으로 설정
+// RF 파워 변경 (Central / Peripheral 개별)
+await reader.BleWriteRfPowerAsync(centralIndex: 7, peripheralIndex: 7); // 둘 다 +4 dBm
+
+// 호환 API — 단일 인덱스를 양쪽(Central=Peripheral)에 동일 적용
+byte[] txPwr = await reader.BleReadTxPowerAsync();   // [0]=Central, [1]=Peripheral
+if (txPwr.Length > 0)
+    Console.WriteLine($"TX Power: {IksungReader.TxPowerToString(txPwr[0])} (index={txPwr[0]})");
+await reader.BleWriteTxPowerAsync(7);                // Central=Peripheral=+4 dBm
 ```
 
 **TxPowerToString 반환값 예시:**
@@ -2806,6 +2709,231 @@ if (gap.Length >= 8)
 byte[] ce = await reader.BleReadCentralEnableAsync();
 Console.WriteLine($"Central Mode: {(ce.Length > 0 && ce[0] == 1 ? "Enabled" : "Disabled")}");
 ```
+
+---
+
+### 9. 연결 상태 진단 (펌웨어 V1.37 §12)
+
+Central / Peripheral 의 BLE 연결 상태를 2-byte `[state][tx_ready]` 로 조회합니다.
+
+```csharp
+BleConnectState cs = await reader.BleReadCentralConnectStateAsync();
+Console.WriteLine(cs);            // State=0x03, TxReady=True, Connected=True
+if (cs.TxReady)
+    Console.WriteLine("데이터 전송 가능");
+```
+
+**state 값:**
+
+| state | 의미 |
+|-------|------|
+| `0x00` | 미연결 (idle) |
+| `0x01` | 페어링/GATT 진행 중 |
+| `0x02` | MTU 교환 진행 중 (**아직 전송 불가**) |
+| `0x03` | 완전 준비 (TX 가능) |
+| `0xFE` | 에러 (마지막 페어링 실패) |
+
+| tx_ready | 의미 |
+|----------|------|
+| `0` | 전송 불가 |
+| `1` | 즉시 전송 가능 — **호스트는 이 값만 보면 됨** |
+
+> ⚠ **V1.36 → V1.37 의미 변화**: V1.36 에서는 Central `state==2` 가 "전송 가능" 이었으나,
+> V1.37 부터 `state==2` 는 "MTU 교환 중(전송 불가)" 입니다. 반드시 `TxReady == true`
+> (또는 `State == 3`) 로 전송 가능 여부를 판단하세요. (1-byte 응답이면 SDK 가 V1.36
+> 규칙으로 하위호환 파싱합니다.)
+
+---
+
+### 10. 시스템 리셋 범위 (펌웨어 V1.37 §11)
+
+`BleResetScope` 로 재시작 범위를 지정할 수 있습니다. 무인자 `BleSystemResetAsync()` 는 Full reset 하위호환입니다.
+
+```csharp
+// 설정만 재로드 (~10ms, 연결 유지)
+await reader.BleSystemResetAsync(BleResetScope.SettingsReload);
+
+// Central 만 재시작 (~100ms, Peripheral 연결 유지)
+await reader.BleSystemResetAsync(BleResetScope.CentralOnly);
+
+// 전체 재부팅 (~1s, 모든 연결 해제 → 재연결 필요)
+await reader.BleSystemResetAsync(BleResetScope.Full);
+```
+
+| scope | 값 | 동작 |
+|-------|----|------|
+| `Full` | 0x00 | MCU 전체 재부팅 (~1s). 모든 BLE 연결 해제, 재연결 필요 |
+| `CentralOnly` | 0x01 | Central 만 재시작 (~100ms) |
+| `PeripheralOnly` | 0x02 | Peripheral 만 재시작 (~100ms) |
+| `SettingsReload` | 0x03 | EEPROM→RAM 재로드만 (~10ms) |
+
+> 정의되지 않은 scope 를 보내면 펌웨어가 `state=0xFF` 로 응답하며 `IksungProtocolException` 이 발생합니다.
+
+---
+
+### 11. Boot Health 진단 (펌웨어 V1.40 §13)
+
+부팅 시 16개 핵심 subsystem 의 초기화 결과를 조회합니다.
+
+```csharp
+BleBootHealth health = await reader.BleReadBootHealthAsync();
+if (health.AllOk)
+    Console.WriteLine("모든 subsystem 정상");
+else
+    Console.WriteLine($"실패: {string.Join(", ", health.FailedSubsystems)}");
+
+// 개별 결과
+for (int i = 0; i < health.Results.Count; i++)
+    Console.WriteLine($"{BleBootHealth.Names[i]}: {(health.Results[i] == 0 ? "OK" : $"FAIL({health.Results[i]})")}");
+```
+
+각 값은 `int8`: `0`=OK, `!=0`=실패코드. subsystem 인덱스(0~15):
+
+| # | 이름 | # | 이름 |
+|---|------|---|------|
+| 0 | eeprom | 8 | ble_auth_key |
+| 1 | eeprom_ble | 9 | tim_tick |
+| 2 | eeprom_acu | 10 | led |
+| 3 | wdt | 11 | pn5180 |
+| 4 | ble | 12 | desfire |
+| 5 | uart0 | 13 | usb |
+| 6 | uart1 | 14 | wiegand |
+| 7 | crypto | 15 | threads |
+
+---
+
+### 12. 설정 쓰기 + 범위 검증 (펌웨어 V1.37 §10)
+
+쓰기 API 는 송신 전 클라이언트 측에서 범위를 검증하고(`ArgumentOutOfRangeException`),
+펌웨어가 거부하면 `state=0xFF` → `IksungProtocolException` 을 던집니다.
+
+```csharp
+// GAP 연결 파라미터 (모두 16-bit, 펌웨어는 LE 로 받음)
+await reader.BleWriteGapConnectParamsAsync(
+    minConnInterval: 16,   // 6~3200 (×1.25ms)
+    maxConnInterval: 60,   // 6~3200, min≤max
+    slaveLatency:    0,    // 0~499
+    connSupTimeout:  320); // 10~3200 (×10ms)
+// 추가 규칙: connSupTimeout×4 > (1+slaveLatency)×maxConnInterval
+
+// 광고 간격 (BE, 20~10240ms)
+int adv = await reader.BleReadAdvIntervalAsync();
+await reader.BleWriteAdvIntervalAsync(160);
+
+// 패킷 수신 타임아웃 (BE, 1~10000ms)
+int rt = await reader.BleReadReceivedTimeoutAsync();
+await reader.BleWriteReceivedTimeoutAsync(200);
+
+// No-Protocol(raw passthrough) 모드 (timeout BE, 1~10000ms)
+var (en, to) = await reader.BleReadCentralNoProtocolAsync();
+await reader.BleWriteCentralNoProtocolAsync(enable: true, noProtocolTimeoutMs: 200);
+await reader.BleWritePeripheralNoProtocolAsync(enable: false, noProtocolTimeoutMs: 200);
+```
+
+**검증 범위 요약:**
+
+| Write | 필드 | Endian | 범위 |
+|-------|------|:------:|------|
+| GAP `0x13` | min/max conn interval | LE | 6~3200 (×1.25ms), min≤max |
+| GAP `0x13` | slave_latency | LE | 0~499 |
+| GAP `0x13` | conn_sup_timeout | LE | 10~3200 (×10ms) |
+| Adv `0x3B` | adv interval | **BE** | 20~10240 ms |
+| Recv `0x53` | recv timeout | **BE** | 1~10000 ms |
+| NoProto `0x56/0x58` | timeout | **BE** | 1~10000 ms |
+
+---
+
+### 13. 기타 설정 R/W
+
+```csharp
+// 출력 인터페이스 (bit0=RS232 / bit1=USB→Serial)
+byte iface = await reader.BleReadOutputInterfaceAsync();
+await reader.BleWriteOutputInterfaceAsync(0x01);
+
+// PHY (0=Auto / 1=1M / 2=2M)
+byte phy = await reader.BleReadPhysAsync();
+await reader.BleWritePhysAsync(0);
+
+// Central / Peripheral 모드
+await reader.BleWriteCentralEnableAsync(true);
+byte mode = await reader.BleReadPeripheralEnableAsync();   // 0=Disable / 1=SPP
+await reader.BleWritePeripheralEnableAsync(1);
+
+// RSSI (dBm, sbyte)
+sbyte rssi = await reader.BleReadCentralConnectedRssiAsync();
+
+// 연결 해제
+await reader.BleCentralUuidDisconnectAsync();
+await reader.BlePeripheralDisconnectAsync();
+
+// Bluetooth Card
+bool using_ = await reader.BleReadBleCardUsingAsync();
+await reader.BleWriteBleCardUsingAsync(true);
+byte cardRssi = await reader.BleReadBleCardRssiAsync();
+await reader.BleWriteBleCardRssiAsync(80);   // 절대값 0~200
+```
+
+---
+
+### 14. 보안 모델 / 인증 키 신뢰 경계 (펌웨어 V1.41 §14)
+
+- BLE 인증 키(`ChallengeResponseAESKey`, 16B)는 **공장 출고 시 랜덤 생성**되어 EEPROM 에
+  저장됩니다(와이파이 공유기 라벨 모델).
+- **USB/UART (물리, 신뢰 채널)**: `0x1D` 응답에 AES 키 **포함** — 로컬 채널이면 정상적으로 키를 받습니다.
+- **BLE (무선, 비신뢰 채널)**: 키 응답에서 제외 + 인증 없이는 명령 거부.
+- **인증 우회 허용 명령** (인증 전에도 통과): `0x64`(challenge) / `0x65`(auth) / `0x66`(auth state)
+  / `0x40`·`0x41`(data relay). 단 `0x40/0x41` 페이로드는 무인증 통과되므로 **응용 레이어 자체 암호화를 권장**합니다.
+
+> **제거됨 (V1.41)**: `0x62/0x63` USER_SECURITY_LEVELS R/W 는 펌웨어에서 제거되었습니다(수신 시
+> 무응답 drop). 대체 경로 — protocol+key: `0x1D/0x1E`, output iface: `0x19/0x1A`, timeout: `0x52/0x53`.
+> SDK 는 신규 API 를 제공하지 않으며, 내부 상수 `BLE_CFG_USER_SECURITY_LEVELS_*` 는 deprecated 입니다.
+
+---
+
+### 15. UUID / 연결 방식 / 데이터 송신 / 보안 인증
+
+```csharp
+// ── UUID 5필드 R/W (20 byte: RxD2+TxD2+Base2+2+12) ──
+byte[] cUuid = await reader.BleReadCentralUuidAsync();
+await reader.BleWriteCentralUuidAsync(cUuid);
+byte[] pUuid = await reader.BleReadPeripheralUuidAsync();
+await reader.BleWritePeripheralUuidAsync(pUuid);
+
+// ── Central 연결 방식 (0=UUID 자동 / 1=User / 2=MAC 자동) ──
+var (type, mac) = await reader.BleReadCentralConnectTypeAsync();
+await reader.BleWriteCentralConnectTypeAsync(0);                       // UUID 매칭 자동
+await reader.BleWriteCentralConnectTypeAsync(2, new byte[]{1,2,3,4,5,6}); // MAC 매칭 자동
+await reader.BleCentralMatchedConnectAsync(new byte[]{1,2,3,4,5,6});  // 스캔 목록 MAC 연결
+
+// ── 데이터 송신 — Send Command(프로토콜 wrap) / Send Data(raw) ──
+await reader.BleCentralSendCommandAsync(payload);     // → Peripheral, 프로토콜 wrap (0x2B)
+await reader.BleCentralSendDataAsync(payload);        // → Peripheral, raw (0x40)
+await reader.BlePeripheralSendCommandAsync(payload);  // → Central, 프로토콜 wrap (0x35)
+await reader.BlePeripheralSendDataAsync(payload);     // → Central, raw (0x41)
+
+// ── 보안 레벨 (1=암호화 / 2=인증암호화 / 3=Key matching / 4=LE Secure) ──
+var (level, key) = await reader.BleReadSecurityLevelAsync();
+await reader.BleWriteSecurityLevelAsync(2);                    // 1 또는 2
+await reader.BleWriteSecurityLevelKeyMatchingAsync("123456");  // 레벨 3, 6자리 ASCII
+await reader.BleWriteSecurityLevelLeSecureAsync(oobKey16);     // 레벨 4, 16 byte OOB
+
+// ── 통신 데이터(내부 명령 사용) + master key ──
+var (enable, aesKey) = await reader.BleReadCommunicationDataAsync(); // aesKey 는 USB/UART 응답에만 포함
+await reader.BleWriteCommunicationDataAsync(true, masterKey16);
+await reader.BleWriteCommunicationDataAsync(false);
+
+// ── Challenge-Response 인증 ──
+byte[] challenge = await reader.BleSecurityGetRandomAsync();   // 16 byte
+// response 32 byte = master key 로 계산
+await reader.BleSecurityAuthenticateAsync(response32);
+bool authed = await reader.BleReadSecurityAuthStateAsync();
+
+// ── Bluetooth Card 키 저장 (Save 전용, Read 없음) ──
+await reader.BleWriteBleCardKeyAsync(firstKey16, customUuid16);
+```
+
+> **검증** — UUID 20 byte, OOB 16 byte, response 32 byte, MAC 6 byte, key matching 6자리 ASCII,
+> master key/카드 키 16 byte 등 길이가 맞지 않으면 송신 전 `ArgumentException` 이 발생합니다.
 
 ---
 
@@ -3878,69 +4006,18 @@ if (target != null)
 ### IksungReader — 팩토리 / 속성 / 이벤트
 
 ```csharp
-// 팩토리 — 채널별 연결
+// 팩토리
 static Task<IksungReader> ConnectSerialAsync(string portName, int baudRate = 115200, CancellationToken ct = default)
-static Task<IksungReader> ConnectSerialAsync(string portName, int baudRate, IksungReaderOptions options, CancellationToken ct = default)
-static Task<IksungReader> ConnectPcscAsync  (string readerName, IksungReaderOptions? options = null, CancellationToken ct = default)
 
 // 속성
-bool             IsConnected   { get; }
-ChannelType      ConnectedVia  { get; }
-IksungReaderOptions Options    { get; }   // ApplyOptions 로 변경 시 즉시 반영
+bool   IsConnected  { get; }
+ChannelType ConnectedVia { get; }
 
 // 이벤트
-event EventHandler<TagDetectedEventArgs>?  TagDetected         // AutoRead 모드 카드 감지
-event EventHandler<bool>?                  ConnectionChanged    // true = 연결됨, false = 끊김
-event EventHandler<RawPacketEventArgs>?    RawPacketReceived    // LogRawPackets=true 일 때 TX/RX 바이트
-
-// 연결 생명주기 / 진단
-void                ApplyOptions       (IksungReaderOptions options)
-Task                DisconnectAsync    ()
-Task<bool>          PingAsync          (int timeoutMs = -1, CancellationToken ct = default)   // -1 = Options.DefaultTimeoutMs
-Task<ReaderInfo>    GetReaderInfoAsync (int timeoutMs = -1, CancellationToken ct = default)
-
-// Raw 명령 (전문가용)
-Task<byte[]>        SendRawCommandAsync (byte cmd1, byte cmd2, byte[]? data = null,
-                                         int timeoutMs = 1000, CancellationToken ct = default)
+event EventHandler<TagDetectedEventArgs>? TagDetected
 
 // 해제
 ValueTask DisposeAsync()
-```
-
-#### IksungReaderOptions
-
-```csharp
-public sealed class IksungReaderOptions
-{
-    bool AutoReconnect    { get; set; }   // 기본 false — 비정상 끊김 시 자동 재연결
-    int  ReconnectDelayMs { get; set; }   // 기본 2000 — 재연결 시도 간격
-    int  DefaultTimeoutMs { get; set; }   // 기본 1000 — PingAsync 등 -1 일 때 사용
-    bool LogRawPackets    { get; set; }   // 기본 false — true 시 RawPacketReceived 이벤트
-}
-```
-
-#### IksungReaderDiscovery (Serial 포트 탐색)
-
-```csharp
-public static class IksungReaderDiscovery
-{
-    static Task<IReadOnlyList<string>> ScanIksungPortsAsync (
-        int baudRate = 115200, int pingTimeoutMs = 300, CancellationToken ct = default)
-    static Task<bool>                  PingPortAsync (
-        string portName, int baudRate = 115200, int timeoutMs = 300, CancellationToken ct = default)
-}
-```
-
-#### IksungPcscDiscovery (PC/SC 리더 탐색)
-
-```csharp
-public static class IksungPcscDiscovery
-{
-    static IReadOnlyList<string> GetAvailableReaders()
-    static void                  StartMonitor()
-    static void                  StopMonitor()
-    static event EventHandler<IReadOnlyList<string>>? ReaderListChanged
-}
 ```
 
 ---
@@ -3948,40 +4025,10 @@ public static class IksungPcscDiscovery
 ### 공통 명령 (MAJOR_COMMON = 0x00)
 
 ```csharp
-// 장치 정보
-Task<string>  ReadVersionAsync       (int timeoutMs = 1000, CancellationToken ct = default)
-Task<byte[]>  ReadUniqueIdAsync      (int timeoutMs = 1000, CancellationToken ct = default)
-
-// RF / 부저
-Task          RfOnAsync              (int timeoutMs = 1000, CancellationToken ct = default)
-Task          RfOffAsync              (int timeoutMs = 1000, CancellationToken ct = default)
-Task          BuzzerAsync             (byte durationUnit = 2, int timeoutMs = 1000, CancellationToken ct = default)
-
-// 카드 메타 (이미 활성화된 카드 대상)
-Task<byte[]>  ReadSakTypeAsync       (int timeoutMs = 1000, CancellationToken ct = default)
-Task<byte[]>  ReadAtsAsync           (int timeoutMs = 1000, CancellationToken ct = default)
-Task<byte[]>  ReadTagTypeAsync       (int timeoutMs = 1000, CancellationToken ct = default)
-
-// 자동 카드 감지 / 종류 (카드 종류 무관하게 단일 호출)
-Task<byte[]>  ReadAllUidAsync        (int timeoutMs = 1000, CancellationToken ct = default)
-Task<byte[]>  ReadAllCardTypeAsync   (int timeoutMs = 1000, CancellationToken ct = default)
-
-// 표준별 UID (Common 명령군)
-Task<byte[]>  ReadIso14443aUidAsync  (int timeoutMs = 1000, CancellationToken ct = default)
-Task<byte[]>  ReadIso14443bUidAsync  (int timeoutMs = 1000, CancellationToken ct = default)
-Task<byte[]>  ReadFelicaUidAsync     (int timeoutMs = 1000, CancellationToken ct = default)
-Task<byte[]>  ReadIso15693UidAsync   (int timeoutMs = 1000, CancellationToken ct = default)
-
-// 교통카드 일련번호
-Task<byte[]>  ReadTmoneySerialAsync     (int timeoutMs = 1000, CancellationToken ct = default)
-Task<byte[]>  ReadCashbeeSerialAsync    (int timeoutMs = 1000, CancellationToken ct = default)
-Task<byte[]>  ReadKcashSerialAsync      (int timeoutMs = 1000, CancellationToken ct = default)
-Task<byte[]>  ReadRailPlusSerialAsync   (int timeoutMs = 1000, CancellationToken ct = default)
-Task<byte[]>  ReadAllCashSerialAsync    (int timeoutMs = 1000, CancellationToken ct = default)
-
-// Watchdog Timer (WDT)
-Task<byte[]>  ReadWdtTimeoutAsync      (int timeoutMs = 1000, CancellationToken ct = default)
-Task          WriteWdtTimeoutAsync     (byte timeoutValue, int timeoutMs = 1000, CancellationToken ct = default)
+Task<string>  ReadVersionAsync  (int timeoutMs = 1000, CancellationToken ct = default)
+Task<byte[]>  ReadUniqueIdAsync (int timeoutMs = 1000, CancellationToken ct = default)
+Task          RfOnAsync         (int timeoutMs = 1000, CancellationToken ct = default)
+Task          RfOffAsync        (int timeoutMs = 1000, CancellationToken ct = default)
 ```
 
 ---
@@ -4162,9 +4209,12 @@ Task<byte[]> UsimReadSerialAsync(int timeoutMs = 1000, CancellationToken ct = de
 ```csharp
 Task<string>  BleReadNameAsync               (int timeoutMs = 1000, CancellationToken ct = default)
 Task          BleWriteNameAsync              (string name, int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleWriteNameAsync              (string name, bool enable, int timeoutMs = 1000, CancellationToken ct = default)
 Task<byte[]>  BleReadMacAddressAsync         (int timeoutMs = 1000, CancellationToken ct = default)
-Task<byte[]>  BleReadTxPowerAsync            (int timeoutMs = 1000, CancellationToken ct = default)
-Task          BleWriteTxPowerAsync           (byte powerIndex, int timeoutMs = 1000, CancellationToken ct = default)
+Task<byte[]>  BleReadTxPowerAsync            (int timeoutMs = 1000, CancellationToken ct = default)   // [0]=Central, [1]=Peripheral
+Task          BleWriteTxPowerAsync           (byte powerIndex, int timeoutMs = 1000, CancellationToken ct = default)   // Central=Peripheral 동일 적용
+Task<(byte Central, byte Peripheral)> BleReadRfPowerAsync (int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleWriteRfPowerAsync           (byte centralIndex, byte peripheralIndex, int timeoutMs = 1000, CancellationToken ct = default)
 Task<byte[]>  BleReadGapConnectParamsAsync   (int timeoutMs = 1000, CancellationToken ct = default)
 Task          BleSystemResetAsync            (int timeoutMs = 1000, CancellationToken ct = default)
 Task<byte[]>  BleReadCentralEnableAsync      (int timeoutMs = 1000, CancellationToken ct = default)
@@ -4173,6 +4223,37 @@ Task          BleCentralScanStopAsync        (int timeoutMs = 1000, Cancellation
 Task<byte[]>  BleCentralScanListAsync        (int timeoutMs = 2000, CancellationToken ct = default)
 Task          BlePeripheralAdvertisingStartAsync(int timeoutMs = 1000, CancellationToken ct = default)
 Task          BlePeripheralAdvertisingStopAsync (int timeoutMs = 1000, CancellationToken ct = default)
+
+// UUID (Central 0x22/0x23, Peripheral 0x32/0x33 — 20 byte)
+Task<byte[]>  BleReadCentralUuidAsync        (int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleWriteCentralUuidAsync       (byte[] uuid20, int timeoutMs = 1000, CancellationToken ct = default)
+Task<byte[]>  BleReadPeripheralUuidAsync     (int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleWritePeripheralUuidAsync    (byte[] uuid20, int timeoutMs = 1000, CancellationToken ct = default)
+
+// Central 연결 방식 (0x2D/0x2E) / 매칭 연결 (0x2C)
+Task<(byte Type, byte[] Mac)> BleReadCentralConnectTypeAsync (int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleWriteCentralConnectTypeAsync(byte type, byte[]? mac = null, int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleCentralMatchedConnectAsync  (byte[] mac, int timeoutMs = 1000, CancellationToken ct = default)
+
+// Send Command(프로토콜 wrap) / Send Data(raw) — Central 0x2B/0x40, Peripheral 0x35/0x41
+Task          BleCentralSendCommandAsync     (byte[] data, int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleCentralSendDataAsync        (byte[] data, int timeoutMs = 1000, CancellationToken ct = default)
+Task          BlePeripheralSendCommandAsync  (byte[] data, int timeoutMs = 1000, CancellationToken ct = default)
+Task          BlePeripheralSendDataAsync     (byte[] data, int timeoutMs = 1000, CancellationToken ct = default)
+
+// Security: 레벨(0x60/0x61) / 통신 데이터(0x1D/0x1E) / Challenge-Response(0x64/0x65/0x66)
+Task<(byte Level, byte[] Key)> BleReadSecurityLevelAsync (int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleWriteSecurityLevelAsync            (byte level, int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleWriteSecurityLevelKeyMatchingAsync (string asciiKey6, int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleWriteSecurityLevelLeSecureAsync    (byte[] oobKey16, int timeoutMs = 1000, CancellationToken ct = default)
+Task<(bool Enable, byte[] AesKey)> BleReadCommunicationDataAsync (int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleWriteCommunicationDataAsync (bool enable, byte[]? aesKey16 = null, int timeoutMs = 1000, CancellationToken ct = default)
+Task<byte[]>  BleSecurityGetRandomAsync      (int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleSecurityAuthenticateAsync   (byte[] response32, int timeoutMs = 1000, CancellationToken ct = default)
+Task<bool>    BleReadSecurityAuthStateAsync  (int timeoutMs = 1000, CancellationToken ct = default)
+
+// Bluetooth Card Key (0x74, Save 전용)
+Task          BleWriteBleCardKeyAsync        (byte[] firstKey16, byte[] customUuid16, int timeoutMs = 1000, CancellationToken ct = default)
 
 static string TxPowerToString(byte powerIndex)
 ```
@@ -4245,57 +4326,19 @@ public sealed class TagDetectedEventArgs : EventArgs
 {
     public CardType CardType { get; }
     public byte[]   Uid      { get; }
-    public string   UidHex   { get; }  // 하이픈 없는 대문자 16진수 (Uid 의 편의 변환)
+    public string   UidHex   { get; }  // 대시 없는 16진수
     public byte     Cmd1     { get; }
     public byte     Cmd2     { get; }
     public byte[]   RawData  { get; }
 }
 ```
 
-#### RawPacketEventArgs
+#### 예외
 
 ```csharp
-public sealed class RawPacketEventArgs : EventArgs
-{
-    public byte[]   Data       { get; }   // on-wire raw 바이트
-    public bool     IsTransmit { get; }   // true=TX, false=RX
-    public DateTime Timestamp  { get; }
-}
-```
-
-#### ReaderInfo
-
-```csharp
-public readonly struct ReaderInfo
-{
-    public string       FirmwareVersion { get; }   // 예: "IS-3500K_V1.8"
-    public ChannelType  Channel         { get; }
-    public bool         IsConnected     { get; }
-    public string?      PortOrAddress   { get; }   // "COM3 @ 115200 bps" / "192.168.1.10:1470" / PC/SC 리더 이름
-
-    public override string ToString();
-}
-```
-
-#### ChannelType
-
-```csharp
-public enum ChannelType
-{
-    Serial,    // System.IO.Ports
-    Ftdi,      // FTDI D2XX (예약 — 향후 채널)
-    Pcsc,      // PC/SC (winscard / pcsc-lite)
-    Socket,    // TCP/IP (내부 사용)
-}
-```
-
-#### 예외 (`Iksung.Reader.Exceptions` 네임스페이스)
-
-```csharp
-IksungException                  // 기반 (모든 SDK 예외의 부모)
-ChannelDisconnectedException     // 물리 채널 끊김 / 연결 실패
-IksungTimeoutException           // 응답 타임아웃
-IksungProtocolException          // 리더기가 STATE_FAIL 또는 깨진 응답 반환
+// Iksung.Reader.Exceptions 네임스페이스
+IksungProtocolException  // 리더기 오류 응답 (State != 0)
+IksungTimeoutException   // 응답 타임아웃
 ```
 
 ---
@@ -4486,7 +4529,6 @@ private void OnTagDetected(object? sender, TagDetectedEventArgs e)
 | 12-Relay | `NET4x-Samples/12-Relay/` | 릴레이 I/O 제어 |
 | 13-CommandConsole | `NET4x-Samples/13-CommandConsole/` | 대화형 RAW 명령 콘솔 |
 | WinFormsIntegration | `NET4x-Samples/04-WinFormsIntegration/` | WinForms Invoke 패턴 |
-| 14-SystemFeatures | `NET4x-Samples/14-SystemFeatures/` | 포트 탐색, 연결 옵션, ConnectionChanged, AutoReconnect, Raw 패킷 |
 
 ```bash
 # 빌드

@@ -54,14 +54,14 @@ public sealed partial class IksungReader
             timeoutMs: timeoutMs, ct: ct).ConfigureAwait(false);
     }
 
-    /// <summary>SECOM LF 블록 데이터를 읽는다.</summary>
+    /// <summary>T5577 LF 블록 데이터를 읽는다.</summary>
     /// <param name="timeoutMs">응답 대기 최대 시간 (ms)</param>
     /// <param name="ct">취소 토큰</param>
-    public async Task<byte[]> ReadLfSecomBlockAsync(int timeoutMs = 2000, CancellationToken ct = default)
+    public async Task<byte[]> ReadLfT5577BlockAsync(int timeoutMs = 2000, CancellationToken ct = default)
     {
         ThrowIfDisposed();
         return await SendCommandAsync(
-            Constants.MAJOR_RF125KHZ, Constants.RF125_SECOM_BLOCK_READ,
+            Constants.MAJOR_RF125KHZ, Constants.RF125_T5577_BLOCK_READ,
             timeoutMs: timeoutMs, ct: ct).ConfigureAwait(false);
     }
 

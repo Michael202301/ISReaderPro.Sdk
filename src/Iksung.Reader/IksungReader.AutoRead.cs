@@ -53,7 +53,7 @@ public sealed partial class IksungReader
             Constants.AUTOSETUP_ISO15693_UID          => (CardType.Iso15693,         pkt.Data),
             Constants.AUTOSETUP_FELICA_UID            => (CardType.Felica,           pkt.Data),
             Constants.AUTOSETUP_LF_EM_UID or
-            Constants.AUTOSETUP_LF_SECOM_LONGDATA_UID => (CardType.Lf125Khz,        pkt.Data),
+            Constants.AUTOSETUP_LF_T5577_LONGDATA_UID => (CardType.Lf125Khz,        pkt.Data),
             _                                         => (CardType.Unknown,          pkt.Data),
         };
     }

@@ -61,7 +61,7 @@ namespace CommandConsole.Net4x
             IksungReader reader;
             if (firstArg.StartsWith("pcsc", StringComparison.OrdinalIgnoreCase))
             {
-                string? readerName = firstArg.Contains(':')
+                string? readerName = firstArg.Contains(":")
                     ? firstArg.Substring(firstArg.IndexOf(':') + 1).Trim()
                     : null;
                 if (readerName == null)

@@ -56,6 +56,9 @@ internal static class Constants
     public const byte BLE_CFG_SYSTEM_RESET                    = 0x18;
     public const byte BLE_CFG_CENTRAL_PHYS_UPDATE_READ        = 0x1B;
     public const byte BLE_CFG_CENTRAL_PHYS_UPDATE_SAVE        = 0x1C;
+    // 펌웨어 V1.40 §13 — Boot Health 진단 (16개 subsystem init 결과 24-byte).
+    // CMD1=0x12 하위의 CMD2=0x1F (MAJOR_BLE_MESAGE 0x1F 와 namespace 가 다름에 주의).
+    public const byte BLE_CFG_BOOT_HEALTH_READ                = 0x1F;
     public const byte BLE_CFG_MAC_ADDRESS_READ                = 0x42;
 
     // Central 탭
@@ -70,10 +73,11 @@ internal static class Constants
     public const byte BLE_CFG_CENTRAL_SCAN_STOP               = 0x28;
     public const byte BLE_CFG_CENTRAL_SCAN_LIST               = 0x29;
     public const byte BLE_CFG_CENTRAL_CONNECT_STATE           = 0x2A;
-    public const byte BLE_CFG_CENTRAL_SEND_DATA               = 0x2B;
+    public const byte BLE_CFG_CENTRAL_SEND_DATA               = 0x2B;  // Send Command (프로토콜 wrap)
     public const byte BLE_CFG_CENTRAL_MATCHED_CONNECT         = 0x2C;
     public const byte BLE_CFG_CENTRAL_CONNECT_PARAMS_READ     = 0x2D;
     public const byte BLE_CFG_CENTRAL_CONNECT_PARAMS_WRITE    = 0x2E;
+    public const byte BLE_CFG_CENTRAL_SEND_DATA_RAW           = 0x40;  // Send Data (raw passthrough)
 
     // Peripheral 탭
     public const byte BLE_CFG_PERIPHERAL_ENABLE_READ          = 0x30;
@@ -81,13 +85,14 @@ internal static class Constants
     public const byte BLE_CFG_PERIPHERAL_UUID_READ            = 0x32;
     public const byte BLE_CFG_PERIPHERAL_UUID_SAVE            = 0x33;
     public const byte BLE_CFG_PERIPHERAL_CONNECT_STATE        = 0x34;
-    public const byte BLE_CFG_PERIPHERAL_SEND_DATA            = 0x35;
+    public const byte BLE_CFG_PERIPHERAL_SEND_DATA            = 0x35;  // Send Command (프로토콜 wrap)
     public const byte BLE_CFG_PERIPHERAL_CONNECT_RSSI_READ    = 0x36;
     public const byte BLE_CFG_PERIPHERAL_ADVERTSING_START     = 0x37;
     public const byte BLE_CFG_PERIPHERAL_ADVERTSING_STOP      = 0x38;
     public const byte BLE_CFG_PERIPHERAL_DISCONNECT           = 0x39;
     public const byte BLE_CFG_PERIPHERAL_ADV_INTERVAL_READ    = 0x3A;
     public const byte BLE_CFG_PERIPHERAL_ADV_INTERVAL_SAVE    = 0x3B;
+    public const byte BLE_CFG_PERIPHERAL_SEND_DATA_RAW        = 0x41;  // Send Data (raw passthrough)
 
     // Option 탭
     public const byte BLE_CFG_OUTPUT_INTERFACE_READ           = 0x19;
@@ -104,6 +109,10 @@ internal static class Constants
     // Security 탭
     public const byte BLE_CFG_SECURITY_LEVELS_READ            = 0x60;
     public const byte BLE_CFG_SECURITY_LEVELS_WRITE           = 0x61;
+    // [DEPRECATED/REMOVED 2026-05-23 — 펌웨어 V1.41 에서 제거됨]
+    // 0x62/0x63 USER_SECURITY_LEVELS R/W 는 펌웨어가 더 이상 처리하지 않는다(수신 시 silently drop).
+    // 대체 경로: 0x1D/0x1E (protocol+AES key) + 0x19/0x1A (output iface) + 0x52/0x53 (timeout).
+    // 신규 API 를 만들지 말 것. 상수는 이력 보존 + 재사용 방지 목적으로만 유지.
     public const byte BLE_CFG_USER_SECURITY_LEVELS_READ       = 0x62;
     public const byte BLE_CFG_USER_SECURITY_LEVELS_WRITE      = 0x63;
     public const byte BLE_CFG_USER_SECURITY_RANDOM            = 0x64;
@@ -440,7 +449,7 @@ internal static class Constants
     public const byte AUTOSETUP_WIEGAND_PLUS_SAVE              = 0x59;
     public const byte AUTOSETUP_USB_KEYBOARD_READ              = 0x5A;
     public const byte AUTOSETUP_USB_KEYBOARD_SAVE              = 0x5B;
-    public const byte AUTOSETUP_LF_SECOM_LONGDATA_UID          = 0x65;
+    public const byte AUTOSETUP_LF_T5577_LONGDATA_UID          = 0x65;
     public const byte AUTOSETUP_LF_EM_UID                      = 0x66;
     public const byte AUTOSETUP_DESFIRE_BLOCK_READ             = 0x6A;
     public const byte AUTOSETUP_HCE3_IKUSNG                    = 0x6B;
@@ -468,7 +477,7 @@ internal static class Constants
     public const byte USIM_WWT_BAUD_READ           = 0x41;
 
     // ───── MAJOR_RF125KHZ (0x0C) ─────
-    public const byte RF125_SECOM_BLOCK_READ          = 0x20;
+    public const byte RF125_T5577_BLOCK_READ          = 0x20;
     public const byte RF125_ISO11784_READ             = 0x21;
     public const byte RF125_ISO11784_WRITE            = 0x22;
     public const byte RF125_UNIQUE_ID                 = 0x30;

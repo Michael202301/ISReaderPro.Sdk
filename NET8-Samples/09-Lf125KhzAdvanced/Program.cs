@@ -4,7 +4,7 @@
  * 다양한 LF 125 kHz 카드 포맷을 읽는 예제입니다:
  *   - EM410X  : 공장/출입 관리 시스템에서 가장 흔한 포맷 (5바이트 UID)
  *   - ISO 11784/11785 FDX-B : 동물 ID 칩 (15자리 국가코드 + 개체번호)
- *   - SECOM   : 국내 보안 시스템 전용 블록 포맷
+ *   - T5577   : 국내 보안 시스템 전용 블록 포맷
  *   - Temic   : T5577 범용 재기록 가능 LF 칩
  *   - Raw bits: 원시 RF 비트 스트림
  *   - HTRC 자동 튜닝
@@ -124,13 +124,13 @@ while (!cts.Token.IsCancellationRequested)
         catch (IksungTimeoutException)  { }
     }
 
-    // ── SECOM ──
-    if (!found && mode is "all" or "secom")
+    // ── T5577 ──
+    if (!found && mode is "all" or "t5577")
     {
         try
         {
-            byte[] secom = await reader.ReadLfSecomBlockAsync(1000, cts.Token);
-            PrintTag("SECOM block", secom, "");
+            byte[] t5577 = await reader.ReadLfT5577BlockAsync(1000, cts.Token);
+            PrintTag("T5577 block", t5577, "");
             found = true;
         }
         catch (IksungProtocolException) { }

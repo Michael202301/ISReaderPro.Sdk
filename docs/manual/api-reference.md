@@ -211,9 +211,12 @@ Task<byte[]> UsimReadSerialAsync(int timeoutMs = 1000, CancellationToken ct = de
 ```csharp
 Task<string>  BleReadNameAsync               (int timeoutMs = 1000, CancellationToken ct = default)
 Task          BleWriteNameAsync              (string name, int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleWriteNameAsync              (string name, bool enable, int timeoutMs = 1000, CancellationToken ct = default)
 Task<byte[]>  BleReadMacAddressAsync         (int timeoutMs = 1000, CancellationToken ct = default)
-Task<byte[]>  BleReadTxPowerAsync            (int timeoutMs = 1000, CancellationToken ct = default)
-Task          BleWriteTxPowerAsync           (byte powerIndex, int timeoutMs = 1000, CancellationToken ct = default)
+Task<byte[]>  BleReadTxPowerAsync            (int timeoutMs = 1000, CancellationToken ct = default)   // [0]=Central, [1]=Peripheral
+Task          BleWriteTxPowerAsync           (byte powerIndex, int timeoutMs = 1000, CancellationToken ct = default)   // Central=Peripheral 동일 적용
+Task<(byte Central, byte Peripheral)> BleReadRfPowerAsync (int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleWriteRfPowerAsync           (byte centralIndex, byte peripheralIndex, int timeoutMs = 1000, CancellationToken ct = default)
 Task<byte[]>  BleReadGapConnectParamsAsync   (int timeoutMs = 1000, CancellationToken ct = default)
 Task          BleSystemResetAsync            (int timeoutMs = 1000, CancellationToken ct = default)
 Task<byte[]>  BleReadCentralEnableAsync      (int timeoutMs = 1000, CancellationToken ct = default)
@@ -222,6 +225,37 @@ Task          BleCentralScanStopAsync        (int timeoutMs = 1000, Cancellation
 Task<byte[]>  BleCentralScanListAsync        (int timeoutMs = 2000, CancellationToken ct = default)
 Task          BlePeripheralAdvertisingStartAsync(int timeoutMs = 1000, CancellationToken ct = default)
 Task          BlePeripheralAdvertisingStopAsync (int timeoutMs = 1000, CancellationToken ct = default)
+
+// UUID (Central 0x22/0x23, Peripheral 0x32/0x33 — 20 byte)
+Task<byte[]>  BleReadCentralUuidAsync        (int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleWriteCentralUuidAsync       (byte[] uuid20, int timeoutMs = 1000, CancellationToken ct = default)
+Task<byte[]>  BleReadPeripheralUuidAsync     (int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleWritePeripheralUuidAsync    (byte[] uuid20, int timeoutMs = 1000, CancellationToken ct = default)
+
+// Central 연결 방식 (0x2D/0x2E) / 매칭 연결 (0x2C)
+Task<(byte Type, byte[] Mac)> BleReadCentralConnectTypeAsync (int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleWriteCentralConnectTypeAsync(byte type, byte[]? mac = null, int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleCentralMatchedConnectAsync  (byte[] mac, int timeoutMs = 1000, CancellationToken ct = default)
+
+// Send Command(프로토콜 wrap) / Send Data(raw) — Central 0x2B/0x40, Peripheral 0x35/0x41
+Task          BleCentralSendCommandAsync     (byte[] data, int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleCentralSendDataAsync        (byte[] data, int timeoutMs = 1000, CancellationToken ct = default)
+Task          BlePeripheralSendCommandAsync  (byte[] data, int timeoutMs = 1000, CancellationToken ct = default)
+Task          BlePeripheralSendDataAsync     (byte[] data, int timeoutMs = 1000, CancellationToken ct = default)
+
+// Security: 레벨(0x60/0x61) / 통신 데이터(0x1D/0x1E) / Challenge-Response(0x64/0x65/0x66)
+Task<(byte Level, byte[] Key)> BleReadSecurityLevelAsync (int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleWriteSecurityLevelAsync            (byte level, int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleWriteSecurityLevelKeyMatchingAsync (string asciiKey6, int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleWriteSecurityLevelLeSecureAsync    (byte[] oobKey16, int timeoutMs = 1000, CancellationToken ct = default)
+Task<(bool Enable, byte[] AesKey)> BleReadCommunicationDataAsync (int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleWriteCommunicationDataAsync (bool enable, byte[]? aesKey16 = null, int timeoutMs = 1000, CancellationToken ct = default)
+Task<byte[]>  BleSecurityGetRandomAsync      (int timeoutMs = 1000, CancellationToken ct = default)
+Task          BleSecurityAuthenticateAsync   (byte[] response32, int timeoutMs = 1000, CancellationToken ct = default)
+Task<bool>    BleReadSecurityAuthStateAsync  (int timeoutMs = 1000, CancellationToken ct = default)
+
+// Bluetooth Card Key (0x74, Save 전용)
+Task          BleWriteBleCardKeyAsync        (byte[] firstKey16, byte[] customUuid16, int timeoutMs = 1000, CancellationToken ct = default)
 
 static string TxPowerToString(byte powerIndex)
 ```
