@@ -1,0 +1,33 @@
+# 빌드 산출물
+**/[Bb]in/
+**/[Oo]bj/
+**/[Oo]ut/
+publish/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.userosscache
+
+# NuGet
+*.nupkg
+*.snupkg
+**/packages/
+
+# 테스트 / 커버리지
+coverage*.json
+coverage*.xml
+TestResult.xml
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 임시
+*.tmp
+*.temp
+*.bak

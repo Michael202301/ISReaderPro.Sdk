@@ -1,0 +1,67 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- net8.0 = 최신 환경 / net472 = .NET Framework 4.7.2 (WinForms 레거시 앱) -->
+    <TargetFrameworks>net8.0;net472</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AssemblyName>Iksung.Reader</AssemblyName>
+    <RootNamespace>Iksung.Reader</RootNamespace>
+
+    <!-- Release 는 심볼을 만들지 않는다.
+         ① 배포 정책상 nupkg 에 pdb/SourceLink 를 넣지 않고(소스 노출 방지),
+         ② pdb 를 만들면 디버그 디렉터리에 빌드 PC 경로(D:\Work\...)가 그대로 박혀
+            어셈블리에서 읽힌다. 소비자는 어차피 pdb 가 없어 줄 번호를 못 쓰므로 잃는 것이 없다.
+         로컬 디버깅은 Debug 구성에서 한다. -->
+    <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
+    <DebugSymbols Condition="'$(Configuration)' == 'Release'">false</DebugSymbols>
+
+    <!-- NuGet 패키지 메타데이터 -->
+    <!-- Authors 는 nuget.org 소유자(조직 계정 iksung)와 일치시킨다.
+         접두사 예약 심사가 "패키지 식별 정보의 일관성(특히 author)"을 본다. -->
+    <PackageId>Iksung.Reader</PackageId>
+    <Version>0.1.0-preview</Version>
+    <Authors>iksung</Authors>
+    <Company>Iksung Electronics Co., Ltd.</Company>
+    <Product>Iksung Reader SDK</Product>
+    <Copyright>Copyright (c) Iksung Electronics Co., Ltd.</Copyright>
+    <Description>익성전자 NFC/RFID 리더(IS-3500 시리즈)용 공식 .NET SDK. Serial · PC/SC(USB CCID) · TCP 채널을 같은 코드로 사용하며 Windows · Linux · macOS 에서 동작합니다. — Official .NET SDK for IKSUNG NFC/RFID readers. Serial, PC/SC (USB CCID) and TCP channels with one API. Cross-platform.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Michael202301/ISReaderPro.Sdk</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Michael202301/ISReaderPro.Sdk</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>nfc;rfid;iksung;reader;is-3500;pcsc;ccid;smartcard;serial;iso14443;iso15693;mifare;desfire;ntag</PackageTags>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>0.1.0-preview — 첫 공개 프리릴리스. Serial · PC/SC · TCP 채널, ISO14443A/B · ISO15693 · LF125kHz · MIFARE · DESFire · NTAG · ISO7816(USIM) · AutoRead · BLE 설정 · 릴레이 제어 지원. net8.0 및 net472 듀얼 타깃.</PackageReleaseNotes>
+    <Platforms>AnyCPU;x86;x64</Platforms>
+  </PropertyGroup>
+
+  <!-- 패키지에 담기는 표시용 파일 (빌드 산출물 아님) -->
+  <ItemGroup>
+    <None Include="icon.png" Pack="true" PackagePath="\" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IO.Ports" Version="8.0.0" />
+    <!-- PC/SC (USB CCID) cross-platform 백엔드: Windows=winscard / Linux=libpcsclite / macOS=PCSC.framework 자동 선택.
+         BSD-2-Clause, 무의존성, net8.0 + netstandard2.0(=net472 호환) 제공. ADR: docs/ADR-001-pcsc-nuget.md -->
+    <PackageReference Include="PCSC" Version="7.0.1" />
+  </ItemGroup>
+
+  <!-- net472에서 IAsyncDisposable / ValueTask 지원 -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Iksung.Reader.Tests" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+  </ItemGroup>
+
+</Project>
